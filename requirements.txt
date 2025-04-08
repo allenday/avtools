@@ -1,2 +1,3 @@
 allin1==1.1.0
 natten==0.14.6
+madmom==0.17.dev0
