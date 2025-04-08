@@ -8,17 +8,13 @@ def install_requirements():
         'pip', 'install', '-r', 'requirements.txt', '--no-build-isolation'
     ])
 
-class CustomInstallCommand:
-    def run(self):
-        install_requirements()
-
 setup(
     name="avtools",
     version="0.1.0",
     description="Audio and Video Tools for Media Processing",
-    author="Allen Day",
-    author_email="allen@allenday.com",
-    url="https://github.com/allenday/avtools",
+    author="Your Name",
+    author_email="your.email@example.com",
+    url="https://github.com/yourusername/avtools",
     packages=find_packages(),
     python_requires=">=3.7",
     install_requires=[
@@ -36,11 +32,12 @@ setup(
             "video-extract-shots=avtools.cli.video_commands:extract_shots_main",
         ],
     },
-    cmdclass={
-        'install': CustomInstallCommand,
-    },
 )
 
 if __name__ == "__main__":
     # If this script is run directly, install the requirements
-    install_requirements() 
+    install_requirements()
+    # Then install this package
+    subprocess.check_call([
+        'pip', 'install', '-e', '.', '--no-deps'
+    ]) 
