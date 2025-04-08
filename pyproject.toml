@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avtools"
+version = "0.1.0"
+description = "Audio and Video Tools for Media Processing"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Video",
+]
+
+dependencies = [
+    "ffmpeg-python",
+    "numpy",
+    "pillow",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/avtools"
+"Bug Tracker" = "https://github.com/yourusername/avtools/issues"
+
+[project.scripts]
+avtools = "avtools.cli.main:main"
+audio-json-to-fcpxml = "avtools.cli.audio_commands:json_to_fcpxml_main"
+audio-activations-to-mp4 = "avtools.cli.audio_commands:activations_to_mp4_main"
+video-json-to-fcpxml = "avtools.cli.video_commands:json_to_fcpxml_main"
+video-extract-shots = "avtools.cli.video_commands:extract_shots_main"
+
+[tool.setuptools]
+packages = ["avtools"]
+
+[tool.black]
+line-length = 88
+target-version = ["py37", "py38", "py39", "py310"] 
