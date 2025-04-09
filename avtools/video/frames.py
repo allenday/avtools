@@ -197,7 +197,7 @@ def extract_all_frames(
 ) -> Dict[str, Any]:
     """
     Extract all frames from shots at a specified interval and save to directory.
-    Primarily for processing every frame in each shot, such as for training data.
+    Uses a single ffmpeg call to extract frames, then renames them based on shot info.
     
     Args:
         video_path: Path to video file
@@ -258,87 +258,128 @@ def extract_all_frames(
             "message": "No shots found in data"
         }
     
-    # Calculate total frames to extract for progress bar
-    total_frames_estimate = 0
-    for shot in shots:
-        if float(shot.get('probability', 1.0)) >= min_probability:
-            duration = float(shot['time_duration'])
-            total_frames_estimate += math.ceil(duration / frame_interval)
-    
-    extracted_frames = []
-    total_frames = 0
-    
-    # Create progress bar
-    pbar = tqdm(total=total_frames_estimate, desc="Extracting frames", unit="frame")
-    
+    # Filter shots by probability and calculate total duration
+    filtered_shots = []
+    total_duration = 0
     for i, shot in enumerate(shots):
-        shot_number = i + 1  # 1-based shot number
-        time_offset = float(shot['time_offset'])
-        time_duration = float(shot['time_duration'])
         probability = float(shot.get('probability', 1.0))
-        
-        # Skip shots below threshold
-        if probability < min_probability:
-            continue
-        
-        # Calculate timestamps for frames to extract
-        timestamps = []
-        current_time = time_offset
-        
-        while current_time < (time_offset + time_duration):
-            timestamps.append(current_time)
-            current_time += frame_interval
-        
-        # Extract frames for the shot
-        shot_frames = []
-        
-        for j, timestamp in enumerate(timestamps):
-            frame_number = int(timestamp * fps)
-            output_path = output_dir / f"frame{frame_number:06d}.jpg"
-            
-            # Use ffmpeg to extract frame
-            try:
-                (
-                    ffmpeg
-                    .input(str(video_path), ss=timestamp)
-                    .filter('scale', 'iw', 'ih')  # Maintain original size
-                    .output(str(output_path), vframes=1)
-                    .overwrite_output()
-                    .run(capture_stdout=True, capture_stderr=True)
-                )
-                
-                shot_frames.append({
-                    "frame_number": frame_number,
-                    "shot_number": shot_number,
-                    "time": timestamp,
-                    "path": str(output_path)
-                })
-                total_frames += 1
-                pbar.update(1)
-                
-            except ffmpeg.Error as e:
-                print(f"\nError extracting frame at {timestamp}s: {e.stderr.decode() if e.stderr else str(e)}")
-            except Exception as e:
-                print(f"\nUnexpected error during frame extraction: {e}")
-        
-        if shot_frames:
-            extracted_frames.append({
-                "shot_number": shot_number,
-                "time_offset": time_offset,
-                "time_duration": time_duration,
+        if probability >= min_probability:
+            shot_info = {
+                "shot_number": i + 1,
+                "time_offset": float(shot['time_offset']),
+                "time_duration": float(shot['time_duration']),
                 "probability": probability,
-                "frames_count": len(shot_frames),
-                "frames": shot_frames
-            })
+                "start_frame": int(shot['time_offset'] * fps),
+                "end_frame": int((shot['time_offset'] + shot['time_duration']) * fps)
+            }
+            filtered_shots.append(shot_info)
+            total_duration += shot_info['time_duration']
     
-    pbar.close()
+    if not filtered_shots:
+        return {
+            "success": False,
+            "message": "No shots found above minimum probability threshold"
+        }
     
-    return {
-        "success": True,
-        "video_path": str(video_path),
-        "fps": fps,
-        "shots_processed": len(extracted_frames),
-        "frames_extracted": total_frames,
-        "output_dir": str(output_dir),
-        "shots": extracted_frames
-    } 
+    # Calculate total frames for progress tracking
+    total_frames_estimate = int(total_duration * fps)
+    
+    # Create temporary directory for initial frame extraction
+    import tempfile
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir = Path(temp_dir)
+        
+        # Extract all frames in one ffmpeg call
+        try:
+            # Build complex filter to select frames from shots
+            filter_parts = []
+            for shot in filtered_shots:
+                # Convert time range to frame range
+                start_frame = shot['start_frame']
+                end_frame = shot['end_frame']
+                # Add filter to select frames in this range
+                filter_parts.append(f"between(n,{start_frame},{end_frame})")
+            
+            frame_filter = "+".join(filter_parts)
+            
+            print("Extracting frames with ffmpeg...")
+            (
+                ffmpeg
+                .input(str(video_path))
+                .filter('select', frame_filter)
+                .filter('scale', 'iw', 'ih')  # Maintain original size
+                .output(str(temp_dir / 'frame%06d.jpg'), start_number=0)
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+            
+            # Move and rename files based on frame numbers
+            print("\nProcessing extracted frames...")
+            extracted_frames = []
+            
+            # List all extracted files
+            temp_files = sorted(temp_dir.glob('frame*.jpg'))
+            
+            with tqdm(total=len(temp_files), desc="Processing frames", unit="frame") as pbar:
+                for temp_file in temp_files:
+                    # Get frame number from filename
+                    frame_num = int(temp_file.stem.replace('frame', ''))
+                    
+                    # Find which shot this frame belongs to
+                    for shot in filtered_shots:
+                        if shot['start_frame'] <= frame_num <= shot['end_frame']:
+                            # Calculate relative frame position
+                            rel_frame = frame_num - shot['start_frame']
+                            
+                            # Create final filename
+                            final_path = output_dir / f"frame{frame_num:06d}.jpg"
+                            
+                            # Move file to final location
+                            temp_file.rename(final_path)
+                            
+                            # Record frame info
+                            frame_info = {
+                                "frame_number": frame_num,
+                                "shot_number": shot['shot_number'],
+                                "time": frame_num / fps,
+                                "path": str(final_path)
+                            }
+                            extracted_frames.append(frame_info)
+                            break
+                    
+                    pbar.update(1)
+            
+            # Group frames by shot
+            shots_info = []
+            for shot in filtered_shots:
+                shot_frames = [f for f in extracted_frames if f['shot_number'] == shot['shot_number']]
+                if shot_frames:
+                    shots_info.append({
+                        "shot_number": shot['shot_number'],
+                        "time_offset": shot['time_offset'],
+                        "time_duration": shot['time_duration'],
+                        "probability": shot['probability'],
+                        "frames_count": len(shot_frames),
+                        "frames": shot_frames
+                    })
+            
+            return {
+                "success": True,
+                "video_path": str(video_path),
+                "fps": fps,
+                "shots_processed": len(shots_info),
+                "frames_extracted": len(extracted_frames),
+                "output_dir": str(output_dir),
+                "shots": shots_info
+            }
+            
+        except ffmpeg.Error as e:
+            return {
+                "success": False,
+                "message": f"FFmpeg error: {e.stderr.decode() if e.stderr else str(e)}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error during frame extraction: {str(e)}"
+            } 
