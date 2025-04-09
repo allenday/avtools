@@ -176,3 +176,9 @@ cython_debug/
 *.un~
 *.fcpxml
 
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+

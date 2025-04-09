@@ -63,7 +63,36 @@ avtools audio activations input.json -o visualized.mp4
 # Video tools
 avtools video fcpxml shots.json -v source.mp4 -o shots.fcpxml
 avtools video extract shots.json source.mp4 -o ./extracted_shots/
+
+# Frame extraction and caching
+avtools video extract-frames source.mp4 shots.json --positions start,middle,end
+avtools video extract-all-frames source.mp4 shots.json --output-dir ./frames/
+avtools video cache-list
+avtools video cache-clear --older-than 7
 ```
+
+### Frame Extraction System
+
+AVTools includes a caching frame extraction system that allows you to extract and store frames from shots:
+
+```bash
+# Extract key frames from shots (start, middle, end by default)
+avtools video extract-frames video.mp4 shots.json
+
+# Extract with custom options
+avtools video extract-frames video.mp4 shots.json --positions start,end --format png --quality 100
+
+# Extract all frames from shots (useful for training data)
+avtools video extract-all-frames video.mp4 shots.json --output-dir ./frames/ --frame-interval 0.5
+
+# Manage frame cache
+avtools video cache-list
+avtools video cache-clear --older-than 30  # Clear frames older than 30 days
+```
+
+#### Environment Variables
+
+- `AVTOOLS_CACHE_DIR`: Set a custom cache directory (default: `~/.avtools/cache`)
 
 ### Legacy Command Line Scripts
 
@@ -77,6 +106,12 @@ audio-activations-to-mp4 input.json -o visualized.mp4
 # Video tools
 video-json-to-fcpxml shots.json -v source.mp4 -o shots.fcpxml
 video-extract-shots shots.json source.mp4 -o ./extracted_shots/
+
+# Frame extraction tools
+avtools-extract-frames video.mp4 shots.json
+avtools-extract-all-frames video.mp4 shots.json --output-dir ./frames/
+avtools-cache-list
+avtools-cache-clear
 ```
 
 ### Using as a Library
@@ -95,6 +130,21 @@ shots.extract_shots("shots.json", "source.mp4", output_dir="./extracted_shots/")
 # FCPXML generation for shots
 from avtools.video import fcpxml
 fcpxml.json_to_fcpxml("shots.json", "shots.fcpxml", video_path="source.mp4")
+
+# Frame extraction
+from avtools.video import frames
+from pathlib import Path
+
+# Extract key frames
+result = frames.extract_frames(
+    video_path=Path("video.mp4"),
+    shots_data=Path("shots.json"),
+    extract_positions=["start", "middle", "end"]
+)
+
+# Get cached frame paths
+from avtools.video import cache
+frame_paths = cache.get_frame_paths(video_id="my_video")
 ```
 
 ## Using the transnetv2pt module

@@ -25,6 +25,7 @@ avtools/
 │   │   ├── __init__.py
 │   │   ├── audio_commands.py  # CLI for audio tools
 │   │   ├── video_commands.py  # CLI for video tools
+│   │   ├── extract_frames.py  # CLI for frame extraction
 │   │   └── main.py            # Main CLI entry point
 │   ├── audio/
 │   │   ├── __init__.py
@@ -33,7 +34,10 @@ avtools/
 │   ├── video/
 │   │   ├── __init__.py
 │   │   ├── fcpxml.py          # Core video FCPXML functionality
-│   │   └── shots.py           # Core shot extraction functionality
+│   │   ├── shots.py           # Core shot extraction functionality
+│   │   ├── frames.py          # Frame extraction functionality
+│   │   ├── cache.py           # Cache management utilities
+│   │   └── config.py          # Configuration management
 │   └── common/
 │       ├── __init__.py
 │       ├── fcpxml_utils.py    # Shared FCPXML utilities
@@ -80,6 +84,110 @@ avtools/
 
 ### 7. Testing
 - [ ] Create basic unit tests for core functionality (pending)
+
+### 8. Frame Extraction System
+- [x] Create configuration management module (`video/config.py`)
+- [x] Implement cache management utilities (`video/cache.py`)
+- [x] Implement frame extraction functionality (`video/frames.py`)
+- [x] Create CLI interface for frame extraction (`cli/extract_frames.py`)
+- [x] Add commands to main CLI (`avtools video extract-frames`, etc.)
+- [x] Add dedicated command-line scripts (`avtools-extract-frames`, etc.)
+- [x] Update documentation with new usage examples
+
+## Implemented Features: Caching and Frame Extraction System
+
+### Objectives
+1. Extract and store frames from videos based on shot detection data
+2. Implement a caching system to avoid redundant extraction
+3. Provide a clean API for other tools to access these frames
+4. Support tagging and analysis workflows
+
+### Cache Structure
+```
+$CACHE_DIR/frames/{video_id}/frame{frame_number:06d}_shot{shot_number:04d}.jpg
+```
+
+Where:
+- `$CACHE_DIR` is defined by environment variable `AVTOOLS_CACHE_DIR` (default: `~/.avtools/cache`)
+- `{video_id}` is a user-provided identifier or a hash of the video file
+- `{frame_number}` is the sequential frame number (6-digit zero-padded)
+- `{shot_number}` is the shot index (4-digit zero-padded)
+
+### Implemented Files
+```
+avtools/
+└── video/
+    ├── frames.py          # Frame extraction functionality
+    ├── cache.py           # Cache management utilities
+    └── config.py          # Configuration management
+```
+
+### Implemented Cache Management Functions
+1. **Init Cache**
+   - Create cache directory structure if it doesn't exist
+   - Set up configuration
+
+2. **Frame Extraction**
+   - Extract specific frames based on shot data
+   - Support extracting frames at specific positions (start, middle, end, or all frames)
+   - Store in cache with standardized naming
+
+3. **Cache Retrieval**
+   - Get paths to cached frames for a given video/shot
+   - Check if frames exist in cache
+   - Return structured metadata
+
+4. **Cache Management**
+   - List cached videos/frames
+   - Calculate cache size
+   - Clear cache (with options for age-based cleanup)
+
+### CLI Commands Added
+- `avtools video extract-frames` - Extract frames from shots
+- `avtools video extract-all-frames` - Extract all frames from shots
+- `avtools video cache-list` - List cached frames
+- `avtools video cache-clear` - Clean up cache
+
+### API Implemented
+```python
+# Frame extraction
+extract_frames(
+    video_path: Path,
+    shots_data: dict,
+    cache_dir: Optional[Path] = None,
+    video_id: Optional[str] = None,
+    extract_positions: List[str] = ["start", "middle", "end"],
+    format_: str = "jpg",
+    quality: int = 95
+) -> dict
+
+# Batch extraction
+extract_all_frames(
+    video_path: Path,
+    shots_data: dict,
+    output_dir: Path,
+    min_probability: float = 0.5,
+    frame_interval: Optional[float] = None
+) -> dict
+
+# Cache management
+get_cache_info(cache_dir: Optional[Path] = None) -> dict
+clear_cache(
+    cache_dir: Optional[Path] = None,
+    older_than: Optional[int] = None  # Days
+) -> dict
+get_frame_paths(
+    video_id: str,
+    shot_number: Optional[int] = None,
+    cache_dir: Optional[Path] = None
+) -> List[Path]
+```
+
+### Integration with Tagging System
+- Frames extracted using this system are available at predictable paths
+- Tagging systems can process frames and associate tags with shots
+- Tags can be aggregated at shot level for analysis
+- Results from tagging can be used to enrich shot metadata
 
 ## Remaining Tasks
 1. Complete the implementation of `activations_to_mp4` in the `audio/activations.py` module

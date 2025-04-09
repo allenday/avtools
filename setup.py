@@ -30,6 +30,11 @@ setup(
             "audio-activations-to-mp4=avtools.cli.audio_commands:activations_to_mp4_main",
             "video-json-to-fcpxml=avtools.cli.video_commands:json_to_fcpxml_main",
             "video-extract-shots=avtools.cli.video_commands:extract_shots_main",
+            # New frame extraction and cache management commands
+            "avtools-extract-frames=avtools.cli.extract_frames:main",
+            "avtools-extract-all-frames=avtools.cli.extract_frames:extract_all_frames_main",
+            "avtools-cache-list=avtools.cli.extract_frames:cache_list_main",
+            "avtools-cache-clear=avtools.cli.extract_frames:cache_clear_main",
         ],
     },
 )

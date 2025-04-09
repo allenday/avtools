@@ -140,6 +140,106 @@ def main():
         help="Minimum probability threshold for shots (default: 0.5)."
     )
     
+    # New command: Video extract frames command
+    extract_frames_parser = video_subparsers.add_parser(
+        "extract-frames",
+        help="Extract frames from shots and store in cache"
+    )
+    extract_frames_parser.add_argument(
+        "video_file",
+        help="Path to the video file."
+    )
+    extract_frames_parser.add_argument(
+        "json_file",
+        help="Path to the JSON file with shot data."
+    )
+    extract_frames_parser.add_argument(
+        "--cache-dir", 
+        help="Custom cache directory path (default: ~/.avtools/cache)"
+    )
+    extract_frames_parser.add_argument(
+        "--video-id",
+        help="Custom video ID (defaults to hash of video file)"
+    )
+    extract_frames_parser.add_argument(
+        "--positions", default="start,middle,end",
+        help="Comma-separated positions to extract (start,middle,end)"
+    )
+    extract_frames_parser.add_argument(
+        "--format", choices=["jpg", "png"], default="jpg",
+        help="Image format (jpg, png)"
+    )
+    extract_frames_parser.add_argument(
+        "--quality", type=int, default=95,
+        help="Image quality (1-100)"
+    )
+    extract_frames_parser.add_argument(
+        "--json-output", action="store_true",
+        help="Output results in JSON format"
+    )
+    
+    # New command: Extract all frames
+    extract_all_frames_parser = video_subparsers.add_parser(
+        "extract-all-frames",
+        help="Extract all frames from shots at specific intervals"
+    )
+    extract_all_frames_parser.add_argument(
+        "video_file",
+        help="Path to the video file."
+    )
+    extract_all_frames_parser.add_argument(
+        "json_file",
+        help="Path to the JSON file with shot data."
+    )
+    extract_all_frames_parser.add_argument(
+        "--output-dir", required=True,
+        help="Output directory for batch extraction"
+    )
+    extract_all_frames_parser.add_argument(
+        "--min-probability", type=float, default=0.5,
+        help="Minimum probability threshold for shots"
+    )
+    extract_all_frames_parser.add_argument(
+        "--frame-interval", type=float,
+        help="Seconds between frames (if not specified, extract every frame)"
+    )
+    extract_all_frames_parser.add_argument(
+        "--json-output", action="store_true",
+        help="Output results in JSON format"
+    )
+    
+    # New command: Cache list command
+    cache_list_parser = video_subparsers.add_parser(
+        "cache-list",
+        help="List cached frames"
+    )
+    cache_list_parser.add_argument(
+        "--cache-dir",
+        help="Custom cache directory path (default: ~/.avtools/cache)"
+    )
+    cache_list_parser.add_argument(
+        "--json-output", action="store_true",
+        help="Output results in JSON format"
+    )
+    
+    # New command: Cache clear command
+    cache_clear_parser = video_subparsers.add_parser(
+        "cache-clear",
+        help="Clear cache contents"
+    )
+    cache_clear_parser.add_argument(
+        "--cache-dir",
+        help="Custom cache directory path (default: ~/.avtools/cache)"
+    )
+    cache_clear_parser.add_argument(
+        "--older-than", type=int,
+        help="Only clear items older than specified days"
+    )
+    cache_clear_parser.add_argument(
+        "--json-output", action="store_true",
+        help="Output results in JSON format"
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -166,6 +266,18 @@ def main():
         elif args.video_command == "extract":
             from avtools.cli.video_commands import extract_shots_main
             return extract_shots_main(args)
+        elif args.video_command == "extract-frames":
+            from avtools.cli.extract_frames import main as extract_frames_main
+            return extract_frames_main(args)
+        elif args.video_command == "extract-all-frames":
+            from avtools.cli.extract_frames import extract_all_frames_main
+            return extract_all_frames_main(args)
+        elif args.video_command == "cache-list":
+            from avtools.cli.extract_frames import cache_list_main
+            return cache_list_main(args)
+        elif args.video_command == "cache-clear":
+            from avtools.cli.extract_frames import cache_clear_main
+            return cache_clear_main(args)
         else:
             video_parser.print_help()
     else:
