@@ -40,10 +40,7 @@ def detect_shots(
         
         # Run TransNetV2 prediction
         try:
-            predictions = predict_video(
-                video_path=str(video_path),
-                batch_size=batch_size
-            )
+            predictions = predict_video(str(video_path))
         except Exception as e:
             return {
                 "success": False,
