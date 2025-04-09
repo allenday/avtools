@@ -181,4 +181,7 @@ cython_debug/
 .AppleDouble
 .LSOverride
 ._*
+*.jpg
+*.json
+*.txt
 
