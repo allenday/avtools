@@ -331,8 +331,8 @@ def extract_all_frames(
                             # Calculate relative frame position
                             rel_frame = frame_num - shot['start_frame']
                             
-                            # Create final filename
-                            final_path = output_dir / f"frame{frame_num:06d}.jpg"
+                            # Create final filename with both frame number and shot number
+                            final_path = output_dir / f"frame{frame_num:06d}_shot{shot['shot_number']:04d}.jpg"
                             
                             # Move file to final location
                             temp_file.rename(final_path)
