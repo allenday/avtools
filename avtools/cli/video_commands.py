@@ -10,9 +10,8 @@ from pathlib import Path
 
 # Import video library functions
 from avtools.video import fcpxml
-from avtools.video import shots
 from avtools.video.detect import detect_shots
-from avtools.video.fcpxml import shots_to_fcpxml
+from ..video.shots import extract_shots
 
 
 def json_to_fcpxml_main(args=None):
@@ -133,7 +132,7 @@ def extract_shots_main(args=None):
         output_dir = video_path.parent / f"{video_path.stem}_shots"
     
     # Call the library function
-    result = shots.extract_shots(
+    result = extract_shots(
         json_path=json_path,
         video_path=video_path,
         output_dir=output_dir,
