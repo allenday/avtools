@@ -9,6 +9,7 @@ import math
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any, Tuple
+from tqdm import tqdm
 
 import ffmpeg
 
@@ -257,8 +258,18 @@ def extract_all_frames(
             "message": "No shots found in data"
         }
     
+    # Calculate total frames to extract for progress bar
+    total_frames_estimate = 0
+    for shot in shots:
+        if float(shot.get('probability', 1.0)) >= min_probability:
+            duration = float(shot['time_duration'])
+            total_frames_estimate += math.ceil(duration / frame_interval)
+    
     extracted_frames = []
     total_frames = 0
+    
+    # Create progress bar
+    pbar = tqdm(total=total_frames_estimate, desc="Extracting frames", unit="frame")
     
     for i, shot in enumerate(shots):
         shot_number = i + 1  # 1-based shot number
@@ -303,11 +314,12 @@ def extract_all_frames(
                     "path": str(output_path)
                 })
                 total_frames += 1
+                pbar.update(1)
                 
             except ffmpeg.Error as e:
-                print(f"Error extracting frame at {timestamp}s: {e.stderr.decode() if e.stderr else str(e)}")
+                print(f"\nError extracting frame at {timestamp}s: {e.stderr.decode() if e.stderr else str(e)}")
             except Exception as e:
-                print(f"Unexpected error during frame extraction: {e}")
+                print(f"\nUnexpected error during frame extraction: {e}")
         
         if shot_frames:
             extracted_frames.append({
@@ -318,6 +330,8 @@ def extract_all_frames(
                 "frames_count": len(shot_frames),
                 "frames": shot_frames
             })
+    
+    pbar.close()
     
     return {
         "success": True,
