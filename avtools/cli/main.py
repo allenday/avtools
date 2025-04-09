@@ -4,8 +4,13 @@ Main command line interface for avtools.
 """
 
 import sys
+import os
 import argparse
 from avtools import __version__
+
+# Add the wd14-tagger-standalone directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'wd14-tagger-standalone'))
+from tagger.interrogators import interrogators
 
 def main():
     """Main entry point for the avtools CLI."""
@@ -262,6 +267,67 @@ def main():
         help="Output results in JSON format"
     )
     
+    # Video extract frame tags command
+    extract_frame_tags_parser = video_subparsers.add_parser(
+        "extract-frame-tags",
+        help="Extract tags from frame images using WD14 tagger"
+    )
+    extract_frame_tags_parser.add_argument(
+        "frames_dir",
+        help="Directory containing frame images"
+    )
+    extract_frame_tags_parser.add_argument(
+        "-o", "--output_dir",
+        help="Directory to output JSON files (default: same as frames)"
+    )
+    extract_frame_tags_parser.add_argument(
+        "--model",
+        default="wd14-convnextv2.v1",
+        choices=list(interrogators.keys()),
+        help="Model to use for prediction (default: wd14-convnextv2.v1)"
+    )
+    extract_frame_tags_parser.add_argument(
+        "--threshold", type=float, default=0.35,
+        help="Prediction threshold (default: 0.35)"
+    )
+    extract_frame_tags_parser.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Use CPU only"
+    )
+    extract_frame_tags_parser.add_argument(
+        "--progress-bar",
+        action="store_true",
+        help="Show progress bar"
+    )
+
+    # Video extract shot tags command
+    extract_shot_tags_parser = video_subparsers.add_parser(
+        "extract-shot-tags",
+        help="Aggregate frame tags into shot-level tags"
+    )
+    extract_shot_tags_parser.add_argument(
+        "shots_json",
+        help="Path to shots detection JSON file"
+    )
+    extract_shot_tags_parser.add_argument(
+        "frames_dir",
+        help="Directory containing frame tag JSON files"
+    )
+    extract_shot_tags_parser.add_argument(
+        "-o", "--output_dir",
+        help="Directory to output shot tag JSON files"
+    )
+    extract_shot_tags_parser.add_argument(
+        "--min_frames", type=int, default=2,
+        help="Minimum frames required to include a tag (default: 2)"
+    )
+    extract_shot_tags_parser.add_argument(
+        "--progress-bar",
+        action="store_true",
+        help="Show progress bar"
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -276,11 +342,11 @@ def main():
             from avtools.cli.audio_commands import json_to_fcpxml_main
             return json_to_fcpxml_main(args)
         elif args.audio_command == "activations":
-            from avtools.cli.audio_commands import activations_to_mp4_main
-            return activations_to_mp4_main(args)
+            from avtools.cli.audio_commands import activations_main
+            return activations_main(args)
         else:
             audio_parser.print_help()
-            
+            return 1
     elif args.command == "video":
         if args.video_command == "fcpxml":
             from avtools.cli.video_commands import json_to_fcpxml_main
@@ -292,7 +358,7 @@ def main():
             from avtools.cli.video_commands import extract_shots_main
             return extract_shots_main(args)
         elif args.video_command == "extract-frames":
-            from avtools.cli.extract_frames import main as extract_frames_main
+            from avtools.cli.extract_frames import extract_frames_main
             return extract_frames_main(args)
         elif args.video_command == "extract-all-frames":
             from avtools.cli.extract_frames import extract_all_frames_main
@@ -303,12 +369,18 @@ def main():
         elif args.video_command == "cache-clear":
             from avtools.cli.extract_frames import cache_clear_main
             return cache_clear_main(args)
+        elif args.video_command == "extract-frame-tags":
+            from avtools.cli.video_commands import extract_frame_tags_main
+            return extract_frame_tags_main(args)
+        elif args.video_command == "extract-shot-tags":
+            from avtools.cli.video_commands import extract_shot_tags_main
+            return extract_shot_tags_main(args)
         else:
             video_parser.print_help()
+            return 1
     else:
         parser.print_help()
-
-    return 0
+        return 1
 
 if __name__ == "__main__":
     sys.exit(main()) 
