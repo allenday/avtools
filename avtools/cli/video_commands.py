@@ -5,11 +5,14 @@ Command-line interfaces for video processing tools.
 
 import sys
 import argparse
+import json
 from pathlib import Path
 
 # Import video library functions
 from avtools.video import fcpxml
 from avtools.video import shots
+from avtools.video.detect import detect_shots
+from avtools.video.fcpxml import shots_to_fcpxml
 
 
 def json_to_fcpxml_main(args=None):
@@ -140,6 +143,38 @@ def extract_shots_main(args=None):
     return 0 if result else 1
 
 
+def detect_shots_main(args):
+    """
+    Main entry point for shot detection command.
+    """
+    video_path = Path(args.video_file)
+    
+    # Set default output path if not provided
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        output_path = video_path.with_name(f"{video_path.stem}_shots.json")
+    
+    # Run shot detection
+    result = detect_shots(
+        video_path=video_path,
+        threshold=args.threshold,
+        batch_size=args.batch_size
+    )
+    
+    if result["success"]:
+        # Write results to JSON file
+        with open(output_path, 'w') as f:
+            json.dump(result, f, indent=2)
+        print(f"Shot detection complete:")
+        print(f"- Found {len(result['shots'])} shots")
+        print(f"- Results saved to: {output_path}")
+        return 0
+    else:
+        print(f"Error: {result.get('message', 'Shot detection failed')}")
+        return 1
+
+
 if __name__ == "__main__":
     # If this script is run directly, determine which function to call
     script_name = Path(sys.argv[0]).name
@@ -148,6 +183,8 @@ if __name__ == "__main__":
         sys.exit(json_to_fcpxml_main())
     elif "extract_shots" in script_name:
         sys.exit(extract_shots_main())
+    elif "detect_shots" in script_name:
+        sys.exit(detect_shots_main(sys.argv[1]))
     else:
         print(f"Error: Unknown script name: {script_name}")
         sys.exit(1) 

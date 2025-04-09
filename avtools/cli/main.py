@@ -118,26 +118,48 @@ def main():
         help="Use Film 23.976 fps"
     )
     
-    # Video extract shots command
+    # Video detect shots command
+    detect_shots_parser = video_subparsers.add_parser(
+        "detect-shots",
+        help="Detect shots in a video using TransNetV2"
+    )
+    detect_shots_parser.add_argument(
+        "video_file",
+        help="Path to the video file to analyze"
+    )
+    detect_shots_parser.add_argument(
+        "-o", "--output",
+        help="Path for the output JSON file (default: <video_name>_shots.json)"
+    )
+    detect_shots_parser.add_argument(
+        "--threshold", type=float, default=0.5,
+        help="Detection threshold (default: 0.5)"
+    )
+    detect_shots_parser.add_argument(
+        "--batch-size", type=int, default=8,
+        help="Batch size for processing (default: 8)"
+    )
+    
+    # Video extract shots command (renamed from extract)
     extract_shots_parser = video_subparsers.add_parser(
-        "extract",
+        "extract-shots",
         help="Extract shots from a video based on JSON data"
     )
     extract_shots_parser.add_argument(
         "json_file",
-        help="Path to the JSON file with shot data."
+        help="Path to the JSON file with shot data"
     )
     extract_shots_parser.add_argument(
         "video_file",
-        help="Path to the video file."
+        help="Path to the video file"
     )
     extract_shots_parser.add_argument(
         "-o", "--output_dir",
-        help="Directory to output extracted shots."
+        help="Directory to output extracted shots"
     )
     extract_shots_parser.add_argument(
         "-m", "--min_prob", type=float, default=0.5,
-        help="Minimum probability threshold for shots (default: 0.5)."
+        help="Minimum probability threshold for shots (default: 0.5)"
     )
     
     # New command: Video extract frames command
@@ -263,7 +285,10 @@ def main():
         if args.video_command == "fcpxml":
             from avtools.cli.video_commands import json_to_fcpxml_main
             return json_to_fcpxml_main(args)
-        elif args.video_command == "extract":
+        elif args.video_command == "detect-shots":
+            from avtools.cli.video_commands import detect_shots_main
+            return detect_shots_main(args)
+        elif args.video_command == "extract-shots":
             from avtools.cli.video_commands import extract_shots_main
             return extract_shots_main(args)
         elif args.video_command == "extract-frames":
