@@ -270,10 +270,6 @@ def extract_all_frames(
         if probability < min_probability:
             continue
         
-        # Create shot directory
-        shot_dir = output_dir / f"shot_{shot_number:04d}"
-        shot_dir.mkdir(exist_ok=True)
-        
         # Calculate timestamps for frames to extract
         timestamps = []
         current_time = time_offset
@@ -287,7 +283,7 @@ def extract_all_frames(
         
         for j, timestamp in enumerate(timestamps):
             frame_number = int(timestamp * fps)
-            output_path = shot_dir / f"frame{frame_number:06d}_shot{shot_number:04d}.jpg"
+            output_path = output_dir / f"frame{frame_number:06d}.jpg"
             
             # Use ffmpeg to extract frame
             try:
@@ -320,7 +316,7 @@ def extract_all_frames(
                 "time_duration": time_duration,
                 "probability": probability,
                 "frames_count": len(shot_frames),
-                "shot_dir": str(shot_dir)
+                "frames": shot_frames
             })
     
     return {
