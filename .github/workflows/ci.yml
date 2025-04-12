@@ -37,6 +37,6 @@ jobs:
 
     - name: Run Pytest
       run: |
-        pytest tests/
+        pytest --cov=avtools --cov-report=xml tests/
       env:
         PYTORCH_ENABLE_MPS_FALLBACK: 1 # Ensure MPS fallback for tests
