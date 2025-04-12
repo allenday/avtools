@@ -62,11 +62,14 @@ avtools audio activations input.json -o visualized.mp4
 
 # Video tools
 avtools video fcpxml shots.json -v source.mp4 -o shots.fcpxml
-avtools video extract shots.json source.mp4 -o ./extracted_shots/
+avtools video detect-shots source.mp4 -o shots.json
+avtools video extract-shots shots.json source.mp4 -o ./extracted_shots/
+avtools video extract-frame-tags frames_dir/ -o frame_tags.json
+avtools video extract-shot-tags frame_tags.json -o shot_tags.json
 
 # Frame extraction and caching
-avtools video extract-frames source.mp4 shots.json --positions start,middle,end
-avtools video extract-all-frames source.mp4 shots.json --output-dir ./frames/
+avtools video cache-frames source.mp4 shots.json --positions start,middle,end
+avtools video extract-frames-to-dir source.mp4 shots.json --output-dir ./frames/
 avtools video cache-list
 avtools video cache-clear --older-than 7
 ```
@@ -76,14 +79,14 @@ avtools video cache-clear --older-than 7
 AVTools includes a caching frame extraction system that allows you to extract and store frames from shots:
 
 ```bash
-# Extract key frames from shots (start, middle, end by default)
-avtools video extract-frames video.mp4 shots.json
+# Extract key frames from shots and store in cache (start, middle, end by default)
+avtools video cache-frames video.mp4 shots.json
 
 # Extract with custom options
-avtools video extract-frames video.mp4 shots.json --positions start,end --format png --quality 100
+avtools video cache-frames video.mp4 shots.json --positions start,end --format png --quality 100
 
-# Extract all frames from shots (useful for training data)
-avtools video extract-all-frames video.mp4 shots.json --output-dir ./frames/ --frame-interval 0.5
+# Extract all frames from shots to a directory (useful for training data)
+avtools video extract-frames-to-dir video.mp4 shots.json --output-dir ./frames/ --frame-interval 0.5
 
 # Manage frame cache
 avtools video cache-list
