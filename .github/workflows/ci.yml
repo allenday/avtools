@@ -2,7 +2,7 @@ name: Python CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
     branches: [ main ]
 
@@ -34,3 +34,9 @@ jobs:
     - name: Build MkDocs Documentation
       run: |
         mkdocs build --strict # Fail CI on warnings/errors
+
+    - name: Run Pytest
+      run: |
+        pytest tests/
+      env:
+        PYTORCH_ENABLE_MPS_FALLBACK: 1 # Ensure MPS fallback for tests
