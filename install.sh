@@ -11,10 +11,10 @@ git submodule update --init --recursive
 echo "Installing dependencies with --no-build-isolation flag..."
 pip install -r requirements.txt --no-build-isolation
 
-echo "Setting up the transnetv2pt module properly..."
-cd transnetv2pt
-pip install -e .
-cd ..
+# Clean up any other Python build artifacts in the project
+find . -type d -name "*.egg-info" -exec rm -rf {} +
+find . -type d -name "__pycache__" -exec rm -rf {} +
+find . -type f -name "*.pyc" -delete
 
 # Get the Python bin directory to install scripts
 PYTHON_BIN=$(dirname $(which python))
