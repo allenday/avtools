@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Dict, List
 from PIL import Image
 from tqdm import tqdm
+import logging
+import subprocess
 
 # Import video library functions
 from avtools.video import fcpxml
@@ -23,8 +25,65 @@ warnings.filterwarnings('ignore', category=UserWarning, module='onnxruntime')
 
 # Add the wd14-tagger-standalone directory to Python path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'wd14-tagger-standalone'))
-from tagger.interrogator import Interrogator
+from tagger.interrogator.interrogator import AbsInterrogator as Interrogator
 from tagger.interrogators import interrogators
+
+# Set up logging with a null handler by default
+# Each function will configure its own logger based on CLI args
+logging.getLogger('avtools').addHandler(logging.NullHandler())
+logger = logging.getLogger('avtools.cli')
+
+
+def setup_logger(args):
+    """Set up logger with proper configuration based on args.
+    
+    Args:
+        args: Argument namespace which may contain debug and progress_bar flags
+        
+    Returns:
+        Configured logger instance
+    """
+    # Check if debug and progress-bar flags exist in args, default to False if not
+    debug = getattr(args, 'debug', False)
+    progress_bar = getattr(args, 'progress_bar', False)
+    
+    # Configure logging based on arguments
+    log_level = logging.DEBUG if debug else logging.INFO
+    log_format = '%(asctime)s - %(levelname)s - %(message)s'
+    
+    # Create a custom handler that respects the progress bar
+    class TqdmLoggingHandler(logging.Handler):
+        def emit(self, record):
+            try:
+                msg = self.format(record)
+                # Write to tqdm's output if we're using a progress bar
+                if progress_bar and hasattr(tqdm, 'write'):
+                    tqdm.write(msg)
+                else:
+                    # Use subprocess.run with cat to avoid pager interactions
+                    subprocess.run(["echo", msg, "|", "cat"], shell=True, check=False)
+                self.flush()
+            except Exception:
+                self.handleError(record)
+    
+    # Set up the handler and formatter
+    handler = TqdmLoggingHandler()
+    formatter = logging.Formatter(log_format)
+    handler.setFormatter(formatter)
+    
+    # Configure the logger
+    logger = logging.getLogger('avtools.cli')
+    logger.setLevel(log_level)
+    
+    # Remove any existing handlers
+    for hdlr in logger.handlers[:]:
+        logger.removeHandler(hdlr)
+    logger.addHandler(handler)
+    
+    # Don't propagate to root logger to avoid duplicate messages
+    logger.propagate = False
+    
+    return logger
 
 
 def json_to_fcpxml_main(args=None):
@@ -188,163 +247,334 @@ def detect_shots_main(args):
 
 
 def extract_frame_tags_main(args=None):
-    """CLI entry point for extracting tags from frame images."""
-    if args is None:
-        parser = argparse.ArgumentParser(
-            description='Extract tags from frame images using WD14 tagger.'
-        )
-        parser.add_argument(
-            'frames_dir',
-            help='Directory containing frame images.'
-        )
-        parser.add_argument(
-            '-o', '--output_dir',
-            help='Directory to output JSON files (default: same as frames).'
-        )
-        parser.add_argument(
-            '--model',
-            default='wd14-convnextv2.v1',
-            choices=list(interrogators.keys()),
-            help='Model to use for prediction (default: wd14-convnextv2.v1)'
-        )
-        parser.add_argument(
-            '--threshold', type=float, default=0.35,
-            help='Prediction threshold (default: 0.35)'
-        )
-        parser.add_argument(
-            '--cpu',
-            action='store_true',
-            help='Use CPU only'
-        )
-        parser.add_argument(
-            '--progress-bar',
-            action='store_true',
-            help='Show progress bar'
-        )
-        args = parser.parse_args()
-
-    frames_dir = Path(args.frames_dir)
-    if not frames_dir.is_dir():
-        print(f"Error: Frames directory not found: {frames_dir}")
-        return 1
-
-    # Use a dedicated output directory by default
-    output_dir = Path(args.output_dir) if args.output_dir else frames_dir.parent / 'frame_tags'
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Initialize tagger
-    interrogator = interrogators[args.model]
-    if args.cpu:
-        interrogator.use_cpu()
-
-    # Process each frame
-    frame_files = sorted(frames_dir.glob('*.jpg'))
-    if not frame_files:
-        print(f"Error: No jpg files found in {frames_dir}")
-        return 1
-
-    # Create progress bar if requested
-    if args.progress_bar:
-        frame_files = tqdm(frame_files, desc="Processing frames")
-
-    for frame_path in frame_files:
-        json_path = output_dir / f"{frame_path.stem}.json"
+    """
+    CLI entry point for extracting tags from frame images.
+    
+    This function handles flexible argument positioning, allowing options
+    to be placed anywhere in the command line.
+    
+    Args:
+        args: Parsed arguments from argparse, or None to parse from sys.argv
         
-        if json_path.exists():
-            if args.progress_bar:
-                frame_files.write(f"Skipping existing: {json_path}")
-            else:
-                print(f"Skipping existing: {json_path}")
-            continue
+    Returns:
+        int: 0 on success, 1 on failure
+    """
+    # Create the parser if args not provided
+    parser = argparse.ArgumentParser(
+        description='Extract tags from frame images using WD14 tagger'
+    )
+    parser.add_argument(
+        'frames_dir',
+        help='Directory containing frame images.'
+    )
+    parser.add_argument(
+        '-o', '--output_dir',
+        help='Directory to output JSON files (default: same as frames)'
+    )
+    parser.add_argument(
+        '--model',
+        default='wd14-convnextv2.v1',
+        choices=list(interrogators.keys()),
+        help=f'Model to use for prediction (default: wd14-convnextv2.v1)'
+    )
+    parser.add_argument(
+        '--threshold', type=float, default=0.35,
+        help='Prediction threshold (default: 0.35)'
+    )
+    parser.add_argument(
+        '--cpu',
+        action='store_true',
+        help='Use CPU only'
+    )
+    parser.add_argument(
+        '--progress-bar',
+        action='store_true',
+        help='Show progress bar'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug mode'
+    )
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Overwrite existing output files'
+    )
+    
+    # Only parse args if they weren't provided
+    if args is None:
+        args = parser.parse_args()
+    
+    # Check if we have the required arguments
+    required_attrs = ["frames_dir"]
+    missing_attrs = [attr for attr in required_attrs if not hasattr(args, attr)]
+    
+    # If attributes are missing, look for them with different naming
+    if missing_attrs:
+        # Map between possible attribute names
+        attr_map = {
+            "frames_dir": ["frames_directory", "frames_path", "img_dir", "image_dir"]
+        }
+        
+        # Try to find missing attributes with alternate names
+        for attr in missing_attrs[:]:  # Work on a copy
+            for alt_attr in attr_map.get(attr, []):
+                if hasattr(args, alt_attr):
+                    # Create the required attribute from the alternate
+                    setattr(args, attr, getattr(args, alt_attr))
+                    missing_attrs.remove(attr)
+                    break
+    
+    # If we still have missing required attributes, print help and exit
+    if missing_attrs:
+        print(f"Error: Missing required arguments: {', '.join(missing_attrs)}")
+        parser.print_help()
+        return 1
 
-        if not args.progress_bar:
-            print(f"Processing: {frame_path}")
-            
+    # Set up logger
+    logger = setup_logger(args)
+    
+    # Get option values with safe defaults
+    frames_dir = Path(args.frames_dir)
+    output_dir = Path(args.output_dir) if hasattr(args, 'output_dir') and args.output_dir else frames_dir
+    model_name = getattr(args, 'model', 'wd14-convnextv2.v1')
+    threshold = getattr(args, 'threshold', 0.35)
+    use_cpu = getattr(args, 'cpu', False)
+    progress_bar = getattr(args, 'progress_bar', False)
+    debug_mode = getattr(args, 'debug', False)
+    force = getattr(args, 'force', False)
+    
+    # Set a quiet mode if progress bar is active and we're not in debug mode
+    quiet_mode = progress_bar and not debug_mode
+    
+    # Helper function for conditional logging
+    def log(message, always=False):
+        if always or not quiet_mode:
+            logger.info(message)
+    
+    # Check if frames directory exists
+    if not frames_dir.is_dir():
+        logger.error(f"Error: Frames directory not found: {frames_dir}")
+        return 1
+    
+    # Create output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize the tagger
+    log("Loading WD14 tagger environment...", always=True)
+    
+    # Check for environment variables
+    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+    
+    # Set device
+    device = "cpu" if use_cpu else None
+    
+    # Initialize tagger and tag expander
+    from tagger.interrogator import WaifuDiffusionInterrogator
+    from tagger.tag_expander import TagExpander
+    
+    tagger = None
+    try:
+        if model_name in interrogators:
+            tagger = interrogators[model_name]
+            if tagger is None:
+                tagger = WaifuDiffusionInterrogator(model_name, device=device)
+                interrogators[model_name] = tagger
+        else:
+            logger.error(f"Error: Unknown model: {model_name}")
+            return 1
+        
+        # Initialize tag expander
+        if debug_mode:
+            log("Initializing tag expander...")
+        expander = TagExpander()
+        
+    except Exception as e:
+        logger.error(f"Error initializing tagger: {e}")
+        if debug_mode:
+            import traceback
+            traceback.print_exc()
+        return 1
+    
+    # Find image files in frames directory
+    log(f"Scanning for images in {frames_dir}...")
+    
+    image_suffixes = {'.jpg', '.jpeg', '.png', '.webp'}
+    image_files = [
+        f for f in frames_dir.iterdir()
+        if f.is_file() and f.suffix.lower() in image_suffixes
+    ]
+    
+    if not image_files:
+        logger.warning(f"No image files found in {frames_dir}")
+        return 0
+    
+    log(f"Found {len(image_files)} image files")
+    
+    # Setup for processing
+    total_processed = 0
+    total_skipped = 0
+    
+    # Process each image
+    pbar = None
+    if progress_bar:
+        pbar = tqdm(sorted(image_files), desc="Processing frames")
+        files_iter = pbar
+    else:
+        files_iter = sorted(image_files)
+    
+    for img_file in files_iter:
+        # Determine output filename
+        json_file = output_dir / f"{img_file.stem}.json"
+        
+        # Skip if already exists and not force
+        if json_file.exists() and not force:
+            log(f"Skipping existing: {json_file}")
+            total_skipped += 1
+            continue
+        
         try:
-            # Get frame tags
-            result = interrogator.interrogate(Image.open(frame_path))
-            tags = Interrogator.postprocess_tags(
-                result[1],
-                threshold=args.threshold,
-                replace_underscore=True
-            )
+            # Load image and get predictions
+            img = Image.open(img_file)
             
-            # Save tags
-            with open(json_path, 'w') as f:
+            # Get predictions
+            log(f"Processing {img_file.name}...")
+            
+            # Get raw ratings and tags with confidence scores
+            raw_tags = tagger.interrogate(img)
+            
+            # Filter by threshold and sort
+            selected_tags = []
+            for tag, score in raw_tags.items():
+                if score >= threshold:
+                    selected_tags.append(tag)
+            
+            # Get expanded tags
+            expanded_tags = expander.expand_tags(selected_tags)
+            
+            # Save results
+            with open(json_file, 'w') as f:
                 json.dump({
-                    'frame': str(frame_path),
-                    'tags': tags
+                    'image': str(img_file),
+                    'threshold': threshold,
+                    'tags': expanded_tags
                 }, f, indent=2)
+            
+            total_processed += 1
+                
         except Exception as e:
-            msg = f"Error processing {frame_path}: {e}"
-            if args.progress_bar:
-                frame_files.write(msg)
-            else:
-                print(msg)
+            logger.error(f"Error processing {img_file.name}: {e}")
+            if debug_mode:
+                import traceback
+                traceback.print_exc()
             continue
-
+    
+    log(f"Complete: {total_processed} images processed, {total_skipped} skipped. Results saved to {output_dir}", always=True)
     return 0
 
 
 def extract_shot_tags_main(args=None):
-    """CLI entry point for aggregating frame tags into shot tags."""
+    """
+    CLI entry point for aggregating frame tags into shot-level tags.
+    
+    This function handles flexible argument positioning, so options like
+    --min_frames and --output_dir can be placed anywhere in the command line.
+    
+    Args:
+        args: Parsed arguments from argparse, or None to parse from sys.argv
+        
+    Returns:
+        int: 0 on success, 1 on failure
+    """
+    # Create the parser if args not provided
+    parser = argparse.ArgumentParser(
+        description='Aggregate frame tags into shot-level tags.'
+    )
+    parser.add_argument(
+        'shots_json',
+        help='Path to shots detection JSON file.'
+    )
+    parser.add_argument(
+        'frames_dir',
+        help='Directory containing frame tag JSON files.'
+    )
+    parser.add_argument(
+        '-o', '--output_dir',
+        help='Directory to output shot tag JSON files.'
+    )
+    parser.add_argument(
+        '--min_frames', type=int, default=0,
+        help='Minimum frames required to include a tag (default: 0)'
+    )
+    parser.add_argument(
+        '--progress-bar',
+        action='store_true',
+        help='Show progress bar'
+    )
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Overwrite existing output files'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug mode'
+    )
+    
+    # Only parse args if they weren't provided
     if args is None:
-        parser = argparse.ArgumentParser(
-            description='Aggregate frame tags into shot-level tags.'
-        )
-        parser.add_argument(
-            'shots_json',
-            help='Path to shots detection JSON file.'
-        )
-        parser.add_argument(
-            'frames_dir',
-            help='Directory containing frame tag JSON files.'
-        )
-        parser.add_argument(
-            '-o', '--output_dir',
-            help='Directory to output shot tag JSON files.'
-        )
-        parser.add_argument(
-            '--min_frames', type=int, default=2,
-            help='Minimum frames required to include a tag (default: 2)'
-        )
-        parser.add_argument(
-            '--progress-bar',
-            action='store_true',
-            help='Show progress bar'
-        )
         args = parser.parse_args()
+    
+    # Check if we have the required arguments
+    required_attrs = ["shots_json", "frames_dir"]
+    missing_attrs = [attr for attr in required_attrs if not hasattr(args, attr)]
+    
+    # If attributes are missing, look for them with different naming
+    if missing_attrs:
+        # Map between possible attribute names
+        attr_map = {
+            "shots_json": ["shots_data", "json_file", "json_path"],
+            "frames_dir": ["frames_directory", "tags_dir", "frames_path"]
+        }
+        
+        # Try to find missing attributes with alternate names
+        for attr in missing_attrs[:]:  # Work on a copy
+            for alt_attr in attr_map.get(attr, []):
+                if hasattr(args, alt_attr):
+                    # Create the required attribute from the alternate
+                    setattr(args, attr, getattr(args, alt_attr))
+                    missing_attrs.remove(attr)
+                    break
+    
+    # If we still have missing required attributes, print help and exit
+    if missing_attrs:
+        print(f"Error: Missing required arguments: {', '.join(missing_attrs)}")
+        parser.print_help()
+        return 1
+
+    # Set up logger
+    logger = setup_logger(args)
+    
+    # Get debug mode and progress bar status safely
+    debug_mode = getattr(args, 'debug', False)
+    progress_bar = getattr(args, 'progress_bar', False)
+    force = getattr(args, 'force', False)
+    min_frames = getattr(args, 'min_frames', 0)
 
     # Load shots data
     shots_path = Path(args.shots_json)
     if not shots_path.is_file():
-        print(f"Error: Shots JSON not found: {shots_path}")
+        logger.error(f"Error: Shots JSON not found: {shots_path}")
         return 1
 
     frames_dir = Path(args.frames_dir)
     if not frames_dir.is_dir():
-        print(f"Error: Frames directory not found: {frames_dir}")
+        logger.error(f"Error: Frames directory not found: {frames_dir}")
         return 1
 
-    # Ensure frame tags exist by running extract_frame_tags if needed
-    frame_files = list(frames_dir.glob('*.jpg'))
-    json_files = list(frames_dir.glob('*.json'))
-    if len(json_files) < len(frame_files):
-        print("Some frame tags missing. Running extract_frame_tags first...")
-        # Create complete Namespace with all required arguments
-        frame_tag_args = argparse.Namespace(
-            frames_dir=str(frames_dir),
-            output_dir=None,
-            model='wd14-convnextv2.v1',
-            threshold=0.35,
-            cpu=False,
-            progress_bar=getattr(args, 'progress_bar', False)  # Get progress_bar from args or default to False
-        )
-        result = extract_frame_tags_main(frame_tag_args)
-        if result != 0:
-            return result
-
-    output_dir = Path(args.output_dir) if args.output_dir else shots_path.parent / 'shot_tags'
+    output_dir = Path(args.output_dir) if hasattr(args, 'output_dir') and args.output_dir else shots_path.parent / 'shot_tags'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(shots_path) as f:
@@ -352,59 +582,85 @@ def extract_shot_tags_main(args=None):
 
     # Process each shot
     shots = shots_data['shots']
-    if args.progress_bar:
-        shots = tqdm(list(enumerate(shots)), desc="Processing shots")
+    pbar = None
+    if progress_bar:
+        pbar = tqdm(list(enumerate(shots)), desc="Processing shots")
+        shots_iter = pbar
     else:
-        shots = enumerate(shots)
+        shots_iter = enumerate(shots)
 
-    for i, shot in shots:
+    total_processed = 0
+    total_skipped = 0
+
+    for i, shot in shots_iter:
         shot_json = output_dir / f"shot_{i:04d}.json"
-        if shot_json.exists():
-            if args.progress_bar:
-                shots.write(f"Skipping existing: {shot_json}")
-            else:
-                print(f"Skipping existing: {shot_json}")
+        if shot_json.exists() and not force:
+            logger.debug(f"Skipping existing: {shot_json}")
+            total_skipped += 1
             continue
 
-        if not args.progress_bar:
-            print(f"Processing shot {i}")
+        logger.debug(f"Processing shot {i}")
         
-        # Collect frame numbers in this shot
-        start_frame = shot['start_frame']
-        end_frame = shot['end_frame']
+        # Find all frame JSON files for this shot using shot number
+        frame_pattern = f"tc_*_shot{i:04d}.json"
+        frame_files = sorted(frames_dir.glob(frame_pattern))
         
-        # Aggregate tags from all frames in shot
-        tag_counts: Dict[str, int] = {}
+        # If no files found with the new pattern, try the legacy pattern as fallback
+        if not frame_files:
+            legacy_pattern = f"frame*_shot{i:04d}.json"
+            frame_files = sorted(frames_dir.glob(legacy_pattern))
+            if frame_files:
+                logger.info(f"Found files using legacy pattern {legacy_pattern}")
+        
+        if not frame_files:
+            logger.warning(f"No frame files found for shot {i} using pattern {frame_pattern}")
+            continue
+            
+        # Count tag occurrences across all frames in the shot
+        tag_counts = {}
         frame_count = 0
         
-        for frame_num in range(start_frame, end_frame + 1):
-            frame_json = frames_dir / f"frame_{frame_num:06d}.json"
-            if not frame_json.exists():
+        for frame_json in frame_files:
+            try:
+                with open(frame_json) as f:
+                    frame_data = json.load(f)
+                    for tag in frame_data.get('tags', []):
+                        tag_counts[tag] = tag_counts.get(tag, 0) + 1
+                frame_count += 1
+            except json.JSONDecodeError as e:
+                logger.error(f"Error reading JSON from {frame_json}: {e}")
                 continue
-                
-            frame_count += 1
-            with open(frame_json) as f:
-                frame_data = json.load(f)
-                for tag in frame_data['tags']:
-                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+            except Exception as e:
+                logger.error(f"Unexpected error processing {frame_json}: {e}")
+                if debug_mode:
+                    import traceback
+                    traceback.print_exc()
+                continue
 
-        # Filter tags that appear in minimum number of frames
+        if frame_count == 0:
+            logger.warning(f"No valid frames processed for shot {i}")
+            continue
+
+        # Filter tags by minimum frame threshold
         shot_tags = {
-            tag: count/frame_count 
-            for tag, count in tag_counts.items() 
-            if count >= args.min_frames
+            tag: count
+            for tag, count in tag_counts.items()
+            if count >= min_frames
         }
 
         # Save shot tags
         with open(shot_json, 'w') as f:
             json.dump({
                 'shot_index': i,
-                'start_frame': start_frame,
-                'end_frame': end_frame,
+                'start_frame': shot['start_frame'],
+                'end_frame': shot['end_frame'],
                 'frame_count': frame_count,
                 'tags': shot_tags
             }, f, indent=2)
+        
+        total_processed += 1
 
+    logger.info(f"Complete: {total_processed} shots processed, {total_skipped} skipped. Results saved to {output_dir}")
     return 0
 
 
