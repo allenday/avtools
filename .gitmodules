@@ -3,4 +3,5 @@
 	url = https://github.com/badde57/transnetv2pt.git
 [submodule "wd14-tagger-standalone"]
 	path = wd14-tagger-standalone
-	url = https://github.com/corkborg/wd14-tagger-standalone.git
+	url = https://github.com/allenday/wd14-tagger-standalone.git
+	branch = feat-onnx-coreml
