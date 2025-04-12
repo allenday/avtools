@@ -1,12 +1,5 @@
-from setuptools import setup, find_packages
-import os
-import subprocess
 
-def install_requirements():
-    """Install requirements with --no-build-isolation flag."""
-    subprocess.check_call([
-        'pip', 'install', '-r', 'requirements.txt', '--no-build-isolation'
-    ])
+from setuptools import find_packages, setup
 
 setup(
     name="avtools",
@@ -45,11 +38,3 @@ setup(
         ],
     },
 )
-
-if __name__ == "__main__":
-    # If this script is run directly, install the requirements
-    install_requirements()
-    # Then install this package
-    subprocess.check_call([
-        'pip', 'install', '-e', '.', '--no-deps'
-    ]) 
