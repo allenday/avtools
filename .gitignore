@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Exception for requirements files
+!requirements*.txt
+
 # C extensions
 *.so
 
@@ -182,8 +185,8 @@ cython_debug/
 .LSOverride
 ._*
 *.jpg
-*.json
-*.txt
+# *.json # Keep tasks.json ignored via tasks/ rule
+# *.txt # Replaced by exception above
 *cache*
 
 # Added by Claude Task Master
@@ -204,7 +207,20 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.cursor/
+.windsurfrules/
 # OS specific
 # Task files
 tasks.json
-tasks/ 
+tasks/
+
+# Backups
+*.bak
+
+# Other specific ignores
+.env.example
+fetch_pmvhaven.py
+
+# Old submodule directories
+transnetv2pt/
+wd14-tagger-standalone/ 
