@@ -370,7 +370,7 @@ def extract_frame_tags_main(args=None):
     # Set device
     device = "cpu" if use_cpu else None
     
-    # Initialize tagger
+    # Initialize tagger and tag expander
     try:
         if model_name in interrogators:
             tagger = interrogators[model_name]
@@ -381,8 +381,14 @@ def extract_frame_tags_main(args=None):
             logger.error(f"Error: Unknown model: {model_name}")
             return 1
         
+        # Initialize tag expander
         if debug_mode:
-            log("Tagger initialized successfully")
+            log("Initializing tag expander...")
+        from danbooru_tag_expander import TagExpander
+        expander = TagExpander()
+        
+        if debug_mode:
+            log("Tagger and expander initialized successfully")
         
     except Exception as e:
         logger.error(f"Error initializing tagger: {e}")
@@ -438,12 +444,14 @@ def extract_frame_tags_main(args=None):
             # Get raw ratings and tags with confidence scores
             ratings, raw_tags = tagger.interrogate(img)
             
-            # Filter by threshold and sort
-            selected_tags = {
-                tag: score
-                for tag, score in raw_tags.items()
+            # Filter by threshold and get tag names
+            selected_tags = [
+                tag for tag, score in raw_tags.items()
                 if score >= threshold
-            }
+            ]
+            
+            # Get expanded tags
+            expanded_tags = expander.expand_tags(selected_tags)
             
             # Save results
             with open(json_file, 'w') as f:
@@ -451,7 +459,8 @@ def extract_frame_tags_main(args=None):
                     'image': str(img_file),
                     'threshold': threshold,
                     'ratings': ratings,
-                    'tags': selected_tags
+                    'raw_tags': {tag: score for tag, score in raw_tags.items() if score >= threshold},
+                    'expanded_tags': expanded_tags
                 }, f, indent=2)
             
             total_processed += 1
