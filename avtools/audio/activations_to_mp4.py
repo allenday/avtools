@@ -1,11 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib.colors import hsv_to_rgb
+import argparse
 import os
 import subprocess
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import hsv_to_rgb
 from tqdm import tqdm
-import argparse
+
 
 def main():
     # Default dimension labels
@@ -135,16 +136,16 @@ def main():
             # Configure radar plot
             ax_radar.set_theta_zero_location("N")  # 0 degrees at top
             ax_radar.set_theta_direction(-1)  # clockwise
-    
+
             # LAYER 1: Draw color wedges as triangles
             for i in range(n_dimensions):
                 # Get angle for this dimension
                 angle = angles[i]
-        
+
                 # Create vertices for a triangle from center to unit circle edge
                 theta1 = angle - (np.pi / n_dimensions)
                 theta2 = angle + (np.pi / n_dimensions)
-        
+
                 # Draw triangle
                 ax_radar.fill(
                     [theta1, 0, theta2],  # Fixed order: theta1, center, theta2
@@ -153,35 +154,35 @@ def main():
                     alpha=0.3,
                     zorder=1
                 )
-        
+
             # LAYER 2: Draw axes and labels in black
             ax_radar.set_xticks(angles)
             ax_radar.set_xticklabels(dimension_labels, fontsize=9)
             ax_radar.set_ylim(0, MAX_VALUE)
             ax_radar.set_rticks([0.25*MAX_VALUE, 0.5*MAX_VALUE, 0.75*MAX_VALUE, MAX_VALUE])
             ax_radar.grid(True, color='black', alpha=0.3, zorder=2)
-    
+
             # Set aspect to be equal (helps with circle rendering)
             ax_radar.set_aspect('equal')
-    
+
             # Add title
             if VIZ_TYPE == 'radar':
                 title = f'Frame {t+1}/{n_timesteps}'
                 if NORMALIZATION != 'none':
                     title += f' ({NORMALIZATION} normalization)'
                 ax_radar.set_title(title, y=1.05, fontsize=12)
-        
+
             # LAYER 3: Add center circle with blended color
             # Create the circle using theta, r coordinates for polar plot
             circle_theta = np.linspace(0, 2*np.pi, 100)
             circle_r = np.ones_like(circle_theta) * 0.25 * MAX_VALUE
             ax_radar.fill(circle_theta, circle_r, color=weighted_color, zorder=3)
-    
+
             # LAYER 4: Draw radar polyline connecting the data points
             # Create closed loop for polygon by appending first value at end
             angles_closed = np.append(angles, angles[0])
             values_closed = np.append(displayed_values, displayed_values[0])
-    
+
             # Draw the data polygon
             ax_radar.plot(angles_closed, values_closed, 'k-', linewidth=2, zorder=4)
 
@@ -195,18 +196,18 @@ def main():
                 title = f'Frame {t+1}/{n_timesteps}'
                 if NORMALIZATION != 'none':
                     title += f' ({NORMALIZATION} normalization)'
-  
+
             ax_bar.set_title(title)
-  
+
             # Create horizontal bars
             for d in range(n_dimensions):
                 # Create the bar with its corresponding color
-                bar = ax_bar.barh(d, displayed_values[d], color=dimension_colors[d])
-  
+                ax_bar.barh(d, displayed_values[d], color=dimension_colors[d])
+
                 # Add dimension label and value
                 ax_bar.text(-0.05, d, dimension_labels[d], ha='right', va='center',
                            fontweight='bold', fontsize=9)
-              
+
                 # Show the raw value for clarity
                 ax_bar.text(displayed_values[d] + 0.02, d, f"{values[d]:.6f}", va='center', fontsize=8)
 

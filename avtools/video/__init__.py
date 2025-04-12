@@ -1,1 +1,1 @@
-"""Video processing utilities for media files.""" 
+"""Video processing utilities for media files."""

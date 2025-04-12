@@ -1,1 +1,1 @@
-"""Command-line interface for avtools.""" 
+"""Command-line interface for avtools."""

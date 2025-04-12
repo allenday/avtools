@@ -1,13 +1,13 @@
-import json
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
-import os
 import argparse
-from pathlib import Path
-from decimal import Decimal, ROUND_HALF_UP, getcontext
-import math
 import bisect
+import json
+import math
 import sys
+import xml.etree.ElementTree as ET
+from decimal import ROUND_HALF_UP, Decimal, getcontext
+from pathlib import Path
+from xml.dom import minidom
+
 import ffmpeg
 
 # --- Configuration ---
@@ -33,7 +33,7 @@ def seconds_to_timeline_time(seconds, timebase, frame_rate, round_up=True):
             total_frames = math.ceil(time_decimal * Decimal(frame_rate))
         else:
             total_frames = (time_decimal * Decimal(frame_rate)).to_integral_value(rounding=ROUND_HALF_UP)
-      
+
         frame_duration_in_tb = Decimal(timebase) / Decimal(frame_rate)
         numerator = total_frames * frame_duration_in_tb
         numerator = int(numerator.to_integral_value(rounding=ROUND_HALF_UP))
@@ -82,10 +82,10 @@ def get_audio_info_ffmpeg(file_path_str):
                         print(f"ffmpeg-python: Duration={duration}, Rate={sample_rate}")
                         return {'duration': str(duration), 'sample_rate': str(sample_rate)}
                     else:
-                        print(f"ffmpeg-python Error: Invalid duration or sample rate")
+                        print("ffmpeg-python Error: Invalid duration or sample rate")
                         return None
                 except ValueError:
-                    print(f"ffmpeg-python Error: Could not convert duration/rate to number")
+                    print("ffmpeg-python Error: Could not convert duration/rate to number")
                     return None
             else:
                 print("ffmpeg-python Error: Duration or sample_rate missing in audio stream.")
@@ -94,7 +94,7 @@ def get_audio_info_ffmpeg(file_path_str):
             print("ffmpeg-python Error: No audio stream found in file.")
             return None
     except ffmpeg.Error as e:
-        print(f"ffmpeg-python Error: Probe failed.", file=sys.stderr)
+        print("ffmpeg-python Error: Probe failed.", file=sys.stderr)
         if e.stderr:
             print(f"ffmpeg stderr:\n{e.stderr.decode('utf-8', errors='ignore')}", file=sys.stderr)
         return None
@@ -127,21 +127,21 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
         audio_filename = audio_path.name
         audio_uri = audio_path.as_uri()
         print(f"--- Asset URI: {audio_uri} ---")
-      
+
         # --- Snap all time values to frame boundaries ---
         print(f"Snapping all time values to {frame_rate}fps grid...")
-      
+
         # Snap beats to frame boundaries
         original_beats = [Decimal(str(b)) for b in json_data.get('beats', [])]
         beats = [snap_to_frame_grid(b, frame_rate) for b in original_beats]
-      
+
         # Snap downbeats to frame boundaries
         original_downbeats = [Decimal(str(d)) for d in json_data.get('downbeats', [])]
         downbeats_list = sorted([snap_to_frame_grid(d, frame_rate) for d in original_downbeats])
-      
+
         # Get segments and prepare for snapping
         segments = json_data.get('segments', [])
-      
+
     except Exception as e:
         print(f"Error processing JSON data: {e}")
         return False
@@ -160,27 +160,27 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
             # Snap segment start/end times to frame boundaries
             original_start_sec = Decimal(str(seg['start']))
             original_end_sec = Decimal(str(seg['end']))
-          
+
             # Snap these times to the frame grid
             snapped_start_sec = snap_to_frame_grid(original_start_sec, frame_rate)
             snapped_end_sec = snap_to_frame_grid(original_end_sec, frame_rate)
-          
+
             label = seg.get('label', f'Segment {i+1}')
             adjusted_start_sec = snapped_start_sec
-        
+
             if downbeats_list:
                 is_on_downbeat = False
                 # No need for tolerance when checking exact frame-aligned downbeats
                 if adjusted_start_sec in downbeats_list:
                     is_on_downbeat = True
-              
+
                 if not is_on_downbeat:
                     # Find the next downbeat
                     next_downbeat_idx = bisect.bisect_left(downbeats_list, adjusted_start_sec)
                     if next_downbeat_idx < len(downbeats_list):
                         adjusted_start_sec = downbeats_list[next_downbeat_idx]
                         print(f"Segment '{label}' start {snapped_start_sec}s adjusted to next downbeat {adjusted_start_sec}s")
-        
+
             adjusted_segments.append({'adjusted_start': adjusted_start_sec, 'label': label})
             max_event_time_sec = max(max_event_time_sec, snapped_end_sec)
         except Exception as e:
@@ -248,26 +248,26 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
     for i, seg_info in enumerate(adjusted_segments):
         seg_start_sec = seg_info['adjusted_start']
         seg_label = seg_info['label']
-    
+
         # Determine end time
         if i + 1 < len(adjusted_segments):
             placeholder_end_sec = adjusted_segments[i+1]['adjusted_start']
         else:
             placeholder_end_sec = timeline_duration_sec
-    
+
         placeholder_end_sec = max(seg_start_sec, placeholder_end_sec)
         placeholder_duration_sec = placeholder_end_sec - seg_start_sec
-    
+
         # Skip zero-duration placeholders
         if placeholder_duration_sec <= Decimal(0.0):
             print(f"Skipping zero duration placeholder for '{seg_label}' at {seg_start_sec}s")
             continue
-    
+
         placeholder_offset_fcpxml = seconds_to_timeline_time(seg_start_sec, timebase, frame_rate, round_up=False)
         placeholder_duration_fcpxml = seconds_to_timeline_time(placeholder_duration_sec, timebase, frame_rate, round_up=True)
-    
+
         print(f"Placeholder '{seg_label}': Offset={placeholder_offset_fcpxml}, Duration={placeholder_duration_fcpxml}")
-    
+
         # Create the placeholder <video> element
         placeholder_clip = ET.SubElement(gap, 'video',
                                         ref=effect_id_placeholder,
@@ -276,7 +276,7 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
                                         name=f"{seg_label}",
                                         start="0s",
                                         duration=placeholder_duration_fcpxml)
-    
+
         # Store placeholder info for downbeat marker attachment
         placeholder_clips.append({
             'element': placeholder_clip,
@@ -292,31 +292,31 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
         placeholder_start = placeholder_info['start_sec']
         placeholder_end = placeholder_info['end_sec']
         placeholder_label = placeholder_info['label']
-    
+
         downbeat_counter = 1  # Counter for downbeats within this placeholder
-    
+
         # Find downbeats that fall within this placeholder's time range
         for i, downbeat_time in enumerate(downbeats_list):
             # Skip downbeats before placeholder start
             if downbeat_time < placeholder_start:
                 continue
-            
+
             # Skip downbeats after placeholder end
             if downbeat_time >= placeholder_end:
                 break
-            
+
             # Calculate relative position within the placeholder
             relative_position_sec = downbeat_time - placeholder_start
             relative_position_fcpxml = seconds_to_timeline_time(relative_position_sec, timebase, frame_rate, round_up=False)
-        
+
             # Add marker to the placeholder
             ET.SubElement(placeholder_clip, 'marker',
                          start=relative_position_fcpxml,
                          duration=marker_frame_duration,
                          value=f"{placeholder_label} DB {downbeat_counter}")
-        
+
             downbeat_counter += 1
-    
+
         # Report how many downbeats were attached
         if downbeat_counter > 1:  # At least one downbeat was found
             print(f"Attached {downbeat_counter-1} downbeat markers to placeholder '{placeholder_label}'")
@@ -330,7 +330,7 @@ def create_fcpxml(json_data, audio_info, output_fcpxml_path, input_json_path_obj
             f.write(xml_string)
         print(f"Successfully created FCPXML v1.13 with {frame_rate}fps-aligned markers: {output_fcpxml_path}")
         return True
-    except IOError as e:
+    except OSError as e:
         print(f"Error writing FCPXML: {e}")
         return False
 
@@ -353,7 +353,7 @@ if __name__ == "__main__":
     print(f"Using frame rate: {frame_rate} fps")
 
     try:
-        with open(input_json_path, 'r', encoding='utf-8') as f:
+        with open(input_json_path, encoding='utf-8') as f:
             data = json.load(f)
     except Exception as e:
         print(f"Error reading JSON file: {e}")

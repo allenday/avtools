@@ -2,11 +2,10 @@
 Common utilities for FCPXML generation used by both audio and video modules.
 """
 
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
-from decimal import Decimal, ROUND_HALF_UP, getcontext
 import math
-from pathlib import Path
+import xml.etree.ElementTree as ET
+from decimal import ROUND_HALF_UP, Decimal, getcontext
+from xml.dom import minidom
 
 # Set precision for decimal calculations
 getcontext().prec = 20
@@ -28,20 +27,20 @@ def seconds_to_timeline_time(seconds, timebase, frame_rate, round_up=True):
     """Converts seconds to frame-aligned FCPXML time."""
     try:
         time_decimal = Decimal(str(seconds))
-        
+
         # Convert seconds to frames
         if round_up:
             frames = math.ceil(time_decimal * Decimal(str(frame_rate)))
         else:
             frames = int((time_decimal * Decimal(str(frame_rate))).to_integral_value(rounding=ROUND_HALF_UP))
-        
+
         # Calculate exactly how many timebase units per frame
         timebase_decimal = Decimal(str(timebase))
         timebase_units_per_frame = timebase_decimal / Decimal(str(frame_rate))
-        
+
         # Convert frames to timebase units - ensure integer result
         timebase_units = int(frames * timebase_units_per_frame)
-        
+
         return f"{timebase_units}/{timebase}s"
     except Exception as e:
         print(f"Warning: Could not convert timeline time {seconds}. Error: {e}")
@@ -70,7 +69,7 @@ def prettify_xml(elem):
     return xml_declaration + doctype_declaration + xml_fragment
 
 
-def create_base_fcpxml(format_id, format_name, frame_duration, width, height, timebase, 
+def create_base_fcpxml(format_id, format_name, frame_duration, width, height, timebase,
                        event_name, project_name, total_timeline_duration):
     """
     Creates the base FCPXML structure used by both audio and video modules.
@@ -79,31 +78,31 @@ def create_base_fcpxml(format_id, format_name, frame_duration, width, height, ti
     # Create the base FCPXML structure
     fcpxml = ET.Element('fcpxml', version='1.13')
     resources = ET.SubElement(fcpxml, 'resources')
-    
+
     # Format definition
     ET.SubElement(resources, 'format', id=format_id, name=format_name,
                 frameDuration=frame_duration, width=str(width), height=str(height),
                 colorSpace="1-1-1 (Rec. 709)")
-    
+
     # Placeholder effect for markers
     effect_id_placeholder = "r3"
-    ET.SubElement(resources, 'effect', id=effect_id_placeholder, name="Placeholder", 
+    ET.SubElement(resources, 'effect', id=effect_id_placeholder, name="Placeholder",
                 uid=PLACEHOLDER_EFFECT_UID)
-    
+
     # Library and event structure
     library = ET.SubElement(fcpxml, 'library')
     event = ET.SubElement(library, 'event', name=event_name)
     project = ET.SubElement(event, 'project', name=project_name)
-    
+
     # Sequence
     sequence = ET.SubElement(project, 'sequence', format=format_id,
                           duration=total_timeline_duration,
                           tcStart="0s", tcFormat="NDF",
                           audioLayout="stereo", audioRate="48k")
     spine = ET.SubElement(sequence, 'spine')
-    
+
     # Main gap element
     gap = ET.SubElement(spine, 'gap', name="Gap", offset="0s", start="0s",
                       duration=total_timeline_duration)
-    
-    return fcpxml, resources, spine, gap, effect_id_placeholder 
+
+    return fcpxml, resources, spine, gap, effect_id_placeholder

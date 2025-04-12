@@ -43,7 +43,9 @@ def get_cache_info(cache_dir: Optional[Path] = None) -> Dict[str, Any]:
     for video_dir in frames_dir.iterdir():
         if video_dir.is_dir():
             video_id = video_dir.name
-            frames = list(video_dir.glob("frame*.jpg"))
+            
+            # Both frame-based and timecode-based files
+            frames = list(video_dir.glob("frame*.jpg")) + list(video_dir.glob("tc_*.jpg"))
             frame_count = len(frames)
             size = sum(f.stat().st_size for f in frames)
             
@@ -110,7 +112,7 @@ def clear_cache(cache_dir: Optional[Path] = None, older_than: Optional[int] = No
                 # Check if directory is older than cutoff
                 dir_mtime = video_dir.stat().st_mtime
                 if dir_mtime < cutoff_time:
-                    frames = list(video_dir.glob("frame*.jpg"))
+                    frames = list(video_dir.glob("frame*.jpg")) + list(video_dir.glob("tc_*.jpg"))
                     frames_removed += len(frames)
                     shutil.rmtree(video_dir)
                     videos_removed += 1
@@ -118,7 +120,7 @@ def clear_cache(cache_dir: Optional[Path] = None, older_than: Optional[int] = No
         # Remove everything
         for video_dir in frames_dir.iterdir():
             if video_dir.is_dir():
-                frames = list(video_dir.glob("frame*.jpg"))
+                frames = list(video_dir.glob("frame*.jpg")) + list(video_dir.glob("tc_*.jpg"))
                 frames_removed += len(frames)
                 shutil.rmtree(video_dir)
                 videos_removed += 1
@@ -152,15 +154,18 @@ def get_frame_paths(
     if shot_number is not None:
         # Format shot number with zero padding
         shot_str = f"_shot{shot_number:04d}"
-        return sorted(video_dir.glob(f"frame*{shot_str}.jpg"))
+        # Find both frame-based and timecode-based files
+        return sorted(list(video_dir.glob(f"frame*{shot_str}.jpg")) + list(video_dir.glob(f"tc_*{shot_str}.jpg")))
     else:
-        return sorted(video_dir.glob("frame*.jpg"))
+        # Find both frame-based and timecode-based files
+        return sorted(list(video_dir.glob("frame*.jpg")) + list(video_dir.glob("tc_*.jpg")))
 
 def check_frame_exists(
     video_id: str,
     frame_number: int,
     shot_number: int,
-    cache_dir: Optional[Path] = None
+    cache_dir: Optional[Path] = None,
+    timecode: Optional[str] = None
 ) -> bool:
     """
     Check if a specific frame exists in the cache.
@@ -170,11 +175,20 @@ def check_frame_exists(
         frame_number: Frame number
         shot_number: Shot number
         cache_dir: Optional custom cache directory
+        timecode: Optional timecode (for timecode-based filenames)
         
     Returns:
         bool: True if the frame exists, False otherwise
     """
     video_dir = get_video_dir(video_id, cache_dir)
+    
+    # Check for both naming conventions
+    if timecode:
+        tc_path = video_dir / f"tc_{timecode.replace(':', '-')}_shot{shot_number:04d}.jpg"
+        if tc_path.exists():
+            return True
+    
+    # Also check the legacy frame-number based naming
     frame_path = video_dir / f"frame{frame_number:06d}_shot{shot_number:04d}.jpg"
     return frame_path.exists()
 
@@ -182,7 +196,8 @@ def get_frame_path(
     video_id: str,
     frame_number: int,
     shot_number: int,
-    cache_dir: Optional[Path] = None
+    cache_dir: Optional[Path] = None,
+    timecode: Optional[str] = None
 ) -> Path:
     """
     Get the path where a specific frame should be stored.
@@ -192,9 +207,29 @@ def get_frame_path(
         frame_number: Frame number
         shot_number: Shot number
         cache_dir: Optional custom cache directory
+        timecode: Optional timecode (for timecode-based filenames)
         
     Returns:
         Path: Path where the frame should be stored
     """
     video_dir = get_video_dir(video_id, cache_dir)
-    return video_dir / f"frame{frame_number:06d}_shot{shot_number:04d}.jpg" 
+    
+    # If timecode is provided, use timecode-based naming
+    if timecode:
+        return video_dir / f"tc_{timecode.replace(':', '-')}_shot{shot_number:04d}.jpg"
+    
+    # Otherwise use frame-number based naming for backward compatibility
+    return video_dir / f"frame{frame_number:06d}_shot{shot_number:04d}.jpg"
+
+def timecode_to_seconds(timecode: str) -> float:
+    """
+    Convert a timecode string to seconds.
+    
+    Args:
+        timecode: Timecode string in HH:MM:SS.mmm format
+        
+    Returns:
+        float: Time in seconds
+    """
+    hours, minutes, seconds = timecode.split(':')
+    return (int(hours) * 3600) + (int(minutes) * 60) + float(seconds) 
