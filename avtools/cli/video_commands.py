@@ -370,25 +370,19 @@ def extract_frame_tags_main(args=None):
     # Set device
     device = "cpu" if use_cpu else None
     
-    # Initialize tagger and tag expander
-    from tagger.interrogator import WaifuDiffusionInterrogator
-    from tagger.tag_expander import TagExpander
-    
-    tagger = None
+    # Initialize tagger
     try:
         if model_name in interrogators:
             tagger = interrogators[model_name]
             if tagger is None:
-                tagger = WaifuDiffusionInterrogator(model_name, device=device)
-                interrogators[model_name] = tagger
+                logger.error(f"Error: Failed to initialize model: {model_name}")
+                return 1
         else:
             logger.error(f"Error: Unknown model: {model_name}")
             return 1
         
-        # Initialize tag expander
         if debug_mode:
-            log("Initializing tag expander...")
-        expander = TagExpander()
+            log("Tagger initialized successfully")
         
     except Exception as e:
         logger.error(f"Error initializing tagger: {e}")
@@ -442,23 +436,22 @@ def extract_frame_tags_main(args=None):
             log(f"Processing {img_file.name}...")
             
             # Get raw ratings and tags with confidence scores
-            raw_tags = tagger.interrogate(img)
+            ratings, raw_tags = tagger.interrogate(img)
             
             # Filter by threshold and sort
-            selected_tags = []
-            for tag, score in raw_tags.items():
-                if score >= threshold:
-                    selected_tags.append(tag)
-            
-            # Get expanded tags
-            expanded_tags = expander.expand_tags(selected_tags)
+            selected_tags = {
+                tag: score
+                for tag, score in raw_tags.items()
+                if score >= threshold
+            }
             
             # Save results
             with open(json_file, 'w') as f:
                 json.dump({
                     'image': str(img_file),
                     'threshold': threshold,
-                    'tags': expanded_tags
+                    'ratings': ratings,
+                    'tags': selected_tags
                 }, f, indent=2)
             
             total_processed += 1
