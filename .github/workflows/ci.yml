@@ -37,10 +37,14 @@ jobs:
         pip install -e .
         cd ..
         
-        # Set up transnetv2pt module
-        cd transnetv2pt
-        pip install -e .
-        cd ..
+        # Set up transnetv2pt module if it exists
+        if [ -d "transnetv2pt" ]; then
+          cd transnetv2pt
+          pip install -e .
+          cd ..
+        else
+          echo "transnetv2pt directory not found, skipping installation"
+        fi
         
         # Install natten with specific commit hash
         pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
