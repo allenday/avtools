@@ -24,6 +24,9 @@ cd ..
 echo "Installing NATTEN with specific commit hash..."
 pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
 
+echo "Installing Cython and madmom dependencies..."
+pip install Cython>=0.29.24
+
 echo "Installing madmom and allin1..."
 pip install git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom --no-build-isolation
 pip install allin1==1.1.0
