@@ -38,7 +38,11 @@ jobs:
         # Install remaining dependencies
         grep -v "^madmom" requirements.txt | grep -v "^torch" | grep -v "^torchvision" | grep -v "^natten" | grep -v "^Cython" > filtered_requirements.txt
         pip install -r filtered_requirements.txt
-        pip install -r requirements-dev.txt
+        
+        # Install development dependencies if they exist
+        if [ -f requirements-dev.txt ]; then
+          pip install -r requirements-dev.txt
+        fi
         
         # Install the package in development mode
         pip install -e .
