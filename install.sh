@@ -4,18 +4,28 @@ set -e
 echo "Making sure submodules are initialized..."
 git submodule update --init --recursive
 
-echo "Installing PyTorch first (needed for natten build)..."
-pip install torch==2.6.0
-
-echo "Installing natten with specific commit hash..."
-pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
-
-echo "Installing remaining dependencies with --no-build-isolation flag..."
-pip install -r requirements.txt --no-build-isolation
+echo "Setting up the wd14-tagger-standalone module properly..."
+cd wd14-tagger-standalone
+pip install -e .
+cd ..
 
 echo "Setting up the transnetv2pt module properly..."
 cd transnetv2pt
 pip install -e .
 cd ..
 
-echo "Installation complete!" 
+echo "Installing dependencies"
+#TODO wd14 seems to require numpy 2.2.2. maybe not?
+#pip uninstall numpy
+pip install -r requirements.txt0
+
+echo "Setting up the NATTEN module properly..."
+cd NATTEN
+make install
+cd ..
+
+pip install -r requirements.txt1 --no-build-isolation "torch==2.6.0"
+
+pip install -e .
+
+echo "Installation complete!"
