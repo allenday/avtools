@@ -4,7 +4,6 @@ Shot detection using TransNetV2.
 
 from pathlib import Path
 from typing import Any
-import time
 
 from avtools.transnetv2_wrapper import predict_video
 
