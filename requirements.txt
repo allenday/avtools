@@ -11,7 +11,7 @@ onnxruntime==1.20.1
 opencv-python==4.11.0.86
 pandas==2.2.3
 Pillow==11.1.0
-torch>=2.0.0
-torchvision==0.21.0
+torch==2.0.0+cpu
+torchvision==0.15.0+cpu
 tqdm==4.66.2
 wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.1
