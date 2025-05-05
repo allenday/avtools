@@ -24,6 +24,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        
+        # Install numpy first (needed for madmom build)
+        pip install numpy==2.2.2
+        
+        # Install Cython (needed for madmom build)
+        pip install Cython>=0.29.24
+        
+        # Install PyTorch (needed for natten build)
+        pip install torch>=2.0.0 torchvision==0.21.0
+        
+        # Now install all requirements with no-build-isolation
         pip install -r requirements.txt --no-build-isolation
         
         # Install development dependencies if they exist
