@@ -5,7 +5,6 @@ huggingface-hub==0.28.1
 Cython>=0.29.24
 madmom @ git+https://github.com/CPJKU/madmom.git@main#egg=madmom
 torch>=2.0.0
-natten==0.14.6
 numpy==2.2.2
 onnxruntime==1.20.1
 opencv-python==4.11.0.86
@@ -14,6 +13,7 @@ pandas==2.2.3
 tqdm==4.66.2
 danbooru-tag-expander>=0.1.5
 torchvision==0.21.0
+natten==0.14.6
 otio-fcpx-xml-lite-adapter==0.1.0
 opentimelineio>=0.17.0
 wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.0
