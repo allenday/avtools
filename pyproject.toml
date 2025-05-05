@@ -1,5 +1,11 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "Cython>=0.29.24",
+    "numpy>=1.23.0",
+    "torch>=2.6.0",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,8 +13,8 @@ name = "avtools"
 version = "0.1.0"
 description = "Audio and Video Tools for Media Processing"
 readme = "README.md"
-requires-python = ">=3.7"
-license = {file = "LICENSE"}
+requires-python = ">=3.10"
+license = {text = "MIT"}
 authors = [
     {name = "Allen Day", email = "allenday@allenday.com"}
 ]
@@ -16,9 +22,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "License :: OSI Approved :: MIT License",
     "Topic :: Multimedia :: Sound/Audio",
@@ -26,11 +29,26 @@ classifiers = [
 ]
 
 dependencies = [
-    "ffmpeg-python",
-    "numpy",
-    "pillow",
+    "Cython>=0.29.24",
+    "danbooru-tag-expander>=0.1.5",
+    "deepdanbooru==1.0.3",
+    "ffmpeg-python==0.2.0",
+    "huggingface-hub==0.28.1",
+    "numpy>=1.23.0",
+    "onnxruntime==1.20.1",
+    "opencv-python==4.11.0.86",
+    "packaging",
+    "pandas==2.2.3",
+    "Pillow==11.1.0",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "tqdm==4.66.2",
     "otio-fcpx-xml-lite-adapter==0.1.0",
     "opentimelineio>=0.17.0",
+    "madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom",
+    "natten @ git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten",
+    "allin1==1.1.0",
+    "wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.1",
 ]
 
 [project.urls]
@@ -49,11 +67,11 @@ packages = ["avtools"]
 
 [tool.black]
 line-length = 88
-target-version = ["py37", "py38", "py39", "py310"]
+target-version = ["py310"]
 
 [tool.ruff]
 # Same as Black.
-line-length = 88
+line-length = 120
 
 # Assume Python 3.10.
 target-version = "py310"
@@ -119,4 +137,4 @@ indent-style = "space"
 # Like Black, respect magic trailing commas.
 skip-magic-trailing-comma = false
 # Like Black, automatically detect the appropriate line ending.
-line-ending = "auto"  
+line-ending = "auto"

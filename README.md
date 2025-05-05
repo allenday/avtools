@@ -6,6 +6,8 @@ Audio and Video Tools for media processing, including shot detection, FCPXML gen
 
 This project includes submodules that need special handling during installation.
 
+requires cmake and python3-dev to be installed
+
 ### Option 1: Using pip (Recommended)
 
 ```bash

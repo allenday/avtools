@@ -1,20 +1,13 @@
-
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages
 
 setup(
     name="avtools",
     version="0.1.0",
     description="Audio and Video Tools for Media Processing",
-    author="Your Name",
-    author_email="your.email@example.com",
-    url="https://github.com/yourusername/avtools",
+    author="Allen Day",
+    author_email="allenday@allenday.com",
+    url="https://github.com/allenday/avtools",
     packages=find_packages(),
-    python_requires=">=3.7",
-    install_requires=[
-        "ffmpeg-python",
-        "numpy",
-        "pillow",
-    ],
     entry_points={
         "console_scripts": [
             "avtools=avtools.cli.main:main",
