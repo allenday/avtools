@@ -12,6 +12,7 @@ pandas==2.2.3
 tqdm==4.66.2
 danbooru-tag-expander>=0.1.5
 torchvision==0.21.0
+otio-fcpx-xml-lite-adapter==0.1.0
+opentimelineio>=0.17.0
 wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.0
 transnetv2pt @ git+https://github.com/badde57/transnetv2pt.git@v1.0.0#egg=transnetv2pt
-

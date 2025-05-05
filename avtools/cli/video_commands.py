@@ -14,7 +14,7 @@ from PIL import Image
 from tqdm import tqdm
 
 # Import video library functions
-from avtools.video import fcpxml
+from avtools.video import json_to_fcpxml
 from avtools.video.detect import (
     detect_shots,  # Assuming detect_shots handles device internally now
 )
@@ -133,7 +133,7 @@ def json_to_fcpxml_main(args):
 
         # Call the library function
         logger.info(f"Converting {input_json_path} to FCPXML at {output_fcpxml_path}...")
-        result = fcpxml.json_to_fcpxml(
+        result = json_to_fcpxml(
             input_json_path=input_json_path,
             output_fcpxml_path=output_fcpxml_path,
             video_path=video_path,

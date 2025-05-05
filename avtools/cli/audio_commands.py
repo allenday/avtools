@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 # Import audio library functions
-from avtools.audio import activations, fcpxml
+from avtools.audio import activations, json_to_fcpxml
 
 
 def json_to_fcpxml_main(args=None):
@@ -43,7 +43,7 @@ def json_to_fcpxml_main(args=None):
     frame_rate = args.fps
 
     # Call the library function
-    result = fcpxml.json_to_fcpxml(
+    result = json_to_fcpxml(
         input_json_path=input_json_path,
         output_fcpxml_path=output_fcpxml_path,
         frame_rate=frame_rate
