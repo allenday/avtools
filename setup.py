@@ -9,6 +9,9 @@ def install_requirements():
     ])
 
 class CustomInstallCommand:
+    def __init__(self, dist):
+        self.dist = dist
+        
     def run(self):
         install_requirements()
 

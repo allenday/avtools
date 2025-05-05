@@ -35,7 +35,10 @@ jobs:
         pip install Cython>=0.29.24
         
         # Install CPU-only PyTorch (needed for natten build)
-        pip install torch==2.0.0+cpu torchvision==0.15.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install torch==2.6.0
+        
+        # Install natten with specific commit hash
+        pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
         
         # Now install all requirements with no-build-isolation
         pip install -r requirements.txt --no-build-isolation
