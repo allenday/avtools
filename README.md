@@ -4,6 +4,8 @@
 
 This project includes submodules that need special handling during installation.
 
+requires cmake and python3-dev to be installed
+
 ### Option 1: Using the install script
 
 The easiest way to install dependencies is to use the provided script:
