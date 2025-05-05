@@ -25,6 +25,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         
+        # Install wheel first (needed for bdist_wheel command)
+        pip install wheel
+        
         # Install numpy first (needed for madmom build)
         pip install numpy==2.2.2
         
