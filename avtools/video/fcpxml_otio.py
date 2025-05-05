@@ -5,10 +5,9 @@ Video FCPXML generation module using otio-fcpx-xml-lite-adapter.
 import json
 from decimal import Decimal, getcontext
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
+from typing import Any
 
 import opentimelineio as otio
-from otio_fcpx_xml_lite_adapter import adapter
 
 from avtools.common.otio_utils import create_timeline_from_elements, write_timeline_to_fcpxml
 from avtools.common.fcpxml_utils import snap_to_frame_grid
@@ -114,14 +113,14 @@ def create_fcpxml_from_data(json_data, video_info, output_fcpxml_path, input_jso
         video_path_str = str(Path(video_filename).absolute())
     else:
         video_filename = Path(video_path_str).name
-    
+
     shots = json_data.get('shots', [])
     if not shots:
         print("Error: No shots found in the JSON data.")
         return False
 
     asset_native_duration_sec = Decimal(str(video_info['duration']))
-    
+
     processed_shots = []
     for i, shot in enumerate(shots):
         shot_start_sec = Decimal(str(shot['time_offset']))
@@ -143,9 +142,9 @@ def create_fcpxml_from_data(json_data, video_info, output_fcpxml_path, input_jso
     max_event_time_sec = max([shot['end_sec'] for shot in processed_shots]) if processed_shots else Decimal('0.0')
     timeline_duration_sec = max(asset_native_duration_sec, max_event_time_sec)
     timeline_duration_sec = snap_to_frame_grid(timeline_duration_sec, frame_rate)
-    
+
     elements = []
-    
+
     main_video_clip = {
         "type": "clip",
         "name": video_filename,
@@ -154,35 +153,35 @@ def create_fcpxml_from_data(json_data, video_info, output_fcpxml_path, input_jso
         "source_path": video_path_str,
         "markers": []
     }
-    
+
     for shot_info in processed_shots:
         shot_start_sec = shot_info['start_sec']
         shot_prob = shot_info['prob']
         shot_index = shot_info['index']
-        
+
         marker_name = f"Shot {shot_index + 1}"
         marker_note = f"Start: {shot_start_sec}s, Prob: {shot_prob:.2f}"
-        
+
         main_video_clip["markers"].append({
             "time": float(shot_start_sec),
             "name": marker_name,
             "note": marker_note
         })
-    
+
     elements.append(main_video_clip)
-    
+
     for i, shot_info in enumerate(processed_shots):
         shot_start_sec = shot_info['start_sec']
         original_end_sec = shot_info['end_sec']
-        
+
         if i < len(processed_shots) - 1:
             next_start_sec = processed_shots[i + 1]['start_sec']
             shot_end_sec = next_start_sec
         else:
             shot_end_sec = original_end_sec
-        
+
         shot_duration_sec = shot_end_sec - shot_start_sec
-        
+
         elements.append({
             "type": "clip",
             "name": f"Shot {shot_info['index'] + 1}",
@@ -196,7 +195,7 @@ def create_fcpxml_from_data(json_data, video_info, output_fcpxml_path, input_jso
                 "note": "Extracted segment"
             }]
         })
-    
+
     timeline_name = f"{video_filename}_Shots"
     timeline = create_timeline_from_elements(timeline_name, float(frame_rate), elements)
     return write_timeline_to_fcpxml(timeline, str(output_fcpxml_path))
