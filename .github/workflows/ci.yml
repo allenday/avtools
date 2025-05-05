@@ -34,8 +34,8 @@ jobs:
         # Install Cython (needed for madmom build)
         pip install Cython>=0.29.24
         
-        # Install PyTorch (needed for natten build)
-        pip install torch>=2.0.0 torchvision==0.21.0
+        # Install CPU-only PyTorch (needed for natten build)
+        pip install torch==2.0.0+cpu torchvision==0.15.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
         
         # Now install all requirements with no-build-isolation
         pip install -r requirements.txt --no-build-isolation
