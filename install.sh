@@ -4,6 +4,13 @@ set -e
 echo "Making sure submodules are initialized..."
 git submodule update --init --recursive
 
+echo "Installing build dependencies..."
+pip install --upgrade pip setuptools wheel
+pip install build
+
+echo "Installing PyTorch (needed for NATTEN build)..."
+pip install torch==2.6.0
+
 echo "Setting up the wd14-tagger-standalone module properly..."
 cd wd14-tagger-standalone
 pip install -e .
@@ -14,18 +21,17 @@ cd transnetv2pt
 pip install -e .
 cd ..
 
-echo "Installing dependencies"
-#TODO wd14 seems to require numpy 2.2.2. maybe not?
-#pip uninstall numpy
-pip install -r requirements.txt0
+echo "Installing NATTEN with specific commit hash..."
+pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
 
-echo "Setting up the NATTEN module properly..."
-cd NATTEN
-make install
-cd ..
+echo "Installing Cython and madmom dependencies..."
+pip install Cython>=0.29.24
 
-pip install -r requirements.txt1 --no-build-isolation "torch==2.6.0"
+echo "Installing madmom and allin1..."
+pip install git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom --no-build-isolation
+pip install allin1==1.1.0
 
+echo "Installing the package with all dependencies..."
 pip install -e .
 
 echo "Installation complete!"

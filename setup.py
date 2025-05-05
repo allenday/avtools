@@ -1,4 +1,5 @@
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages
+
 
 setup(
     name="avtools",
@@ -8,12 +9,6 @@ setup(
     author_email="allenday@allenday.com",
     url="https://github.com/allenday/avtools",
     packages=find_packages(),
-    python_requires=">=3.10",
-    install_requires=[
-        "ffmpeg-python",
-        "numpy",
-        "pillow",
-    ],
     entry_points={
         "console_scripts": [
             "avtools=avtools.cli.main:main",
