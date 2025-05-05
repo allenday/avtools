@@ -1,19 +1,5 @@
 from setuptools import setup, find_packages
-import os
-import subprocess
 
-def install_requirements():
-    """Install requirements with --no-build-isolation flag."""
-    subprocess.check_call([
-        'pip', 'install', '-r', 'requirements.txt', '--no-build-isolation'
-    ])
-
-class CustomInstallCommand:
-    def __init__(self, dist):
-        self.dist = dist
-        
-    def run(self):
-        install_requirements()
 
 setup(
     name="avtools",
@@ -23,12 +9,6 @@ setup(
     author_email="allenday@allenday.com",
     url="https://github.com/allenday/avtools",
     packages=find_packages(),
-    python_requires=">=3.10",
-    install_requires=[
-        "ffmpeg-python",
-        "numpy",
-        "pillow",
-    ],
     entry_points={
         "console_scripts": [
             "avtools=avtools.cli.main:main",
@@ -52,8 +32,3 @@ setup(
         ],
     },
 )
-
-if __name__ == "__main__":
-    # If this script is run directly, install the requirements
-    install_requirements() 
-

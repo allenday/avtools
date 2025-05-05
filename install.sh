@@ -4,6 +4,10 @@ set -e
 echo "Making sure submodules are initialized..."
 git submodule update --init --recursive
 
+echo "Installing build dependencies..."
+pip install --upgrade pip setuptools wheel
+pip install build
+
 echo "Setting up the wd14-tagger-standalone module properly..."
 cd wd14-tagger-standalone
 pip install -e .
@@ -14,18 +18,15 @@ cd transnetv2pt
 pip install -e .
 cd ..
 
-echo "Installing dependencies"
-#TODO wd14 seems to require numpy 2.2.2. maybe not?
-#pip uninstall numpy
-pip install -r requirements.txt0
+echo "Installing PyTorch (needed for NATTEN build)..."
+pip install torch==2.6.0
 
 echo "Setting up the NATTEN module properly..."
 cd NATTEN
 make install
 cd ..
 
-pip install -r requirements.txt1 --no-build-isolation "torch==2.6.0"
-
+echo "Installing the package with all dependencies..."
 pip install -e .
 
 echo "Installation complete!"
