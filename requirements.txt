@@ -1,4 +1,7 @@
 allin1==1.1.0
 ffmpeg-python==0.2.0
-madmom==0.17.dev0
-natten==0.14.6
+Cython>=0.29.24
+torch>=2.0.0
+torchvision>=0.15.0
+madmom @ git+https://github.com/CPJKU/madmom.git@main#egg=madmom
+natten @ git+https://github.com/SHI-Labs/NATTEN.git@50a8f77412320d1413cf71a6fd30bfc8074a33bf#egg=natten
