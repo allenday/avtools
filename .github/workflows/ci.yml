@@ -23,33 +23,39 @@ jobs:
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        pip install build
         
-        # Install wheel first (needed for bdist_wheel command)
-        pip install wheel
+        # Initialize submodules
+        git submodule update --init --recursive
         
-        # Install numpy first (needed for madmom build)
-        pip install numpy==2.2.2
-        
-        # Install Cython (needed for madmom build)
-        pip install Cython>=0.29.24
-        
-        # Install CPU-only PyTorch (needed for natten build)
+        # Install PyTorch first (needed for natten build)
         pip install torch==2.6.0
+        
+        # Set up wd14-tagger-standalone module
+        cd wd14-tagger-standalone
+        pip install -e .
+        cd ..
+        
+        # Set up transnetv2pt module
+        cd transnetv2pt
+        pip install -e .
+        cd ..
         
         # Install natten with specific commit hash
         pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
         
-        # Now install all requirements with no-build-isolation
-        pip install -r requirements.txt --no-build-isolation
+        # Install madmom and allin1
+        pip install git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom --no-build-isolation
+        pip install allin1==1.1.0
+        
+        # Install the package with all dependencies
+        pip install -e .
         
         # Install development dependencies if they exist
         if [ -f requirements-dev.txt ]; then
           pip install -r requirements-dev.txt
         fi
-        
-        # Install the package in development mode
-        pip install -e .
 
     - name: Install and Run Ruff Linter
       run: |
