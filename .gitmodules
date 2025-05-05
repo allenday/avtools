@@ -2,6 +2,6 @@
 [submodule "transnetv2pt"]
 	path = transnetv2pt
 	url = https://github.com/badde57/transnetv2pt.git
-[submodule "natten"]
-	path = natten
-	url = https://github.com/SHI-Labs/NATTEN.git@50a8f77412320d1413cf71a6fd30bfc8074a33bf
+[submodule "NATTEN"]
+	path = NATTEN
+	url = https://github.com/SHI-Labs/NATTEN.git
