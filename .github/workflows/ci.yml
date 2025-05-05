@@ -35,9 +35,17 @@ jobs:
         # Skip natten for now to get CI passing
         # pip install natten==0.14.6
         
-        # Install remaining dependencies
-        grep -v "^madmom" requirements.txt | grep -v "^torch" | grep -v "^torchvision" | grep -v "^natten" | grep -v "^Cython" > filtered_requirements.txt
-        pip install -r filtered_requirements.txt
+        # Install remaining dependencies if requirements.txt exists
+        if [ -f requirements.txt ]; then
+          grep -v "^madmom" requirements.txt | grep -v "^torch" | grep -v "^torchvision" | grep -v "^natten" | grep -v "^Cython" > filtered_requirements.txt
+          if [ -s filtered_requirements.txt ]; then
+            pip install -r filtered_requirements.txt
+          else
+            echo "No additional requirements to install from filtered_requirements.txt"
+          fi
+        else
+          echo "No requirements.txt file found, skipping additional dependencies"
+        fi
         
         # Install development dependencies if they exist
         if [ -f requirements-dev.txt ]; then
