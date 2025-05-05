@@ -4,6 +4,7 @@ ffmpeg-python==0.2.0
 huggingface-hub==0.28.1
 Cython>=0.29.24
 madmom @ git+https://github.com/CPJKU/madmom.git@main#egg=madmom
+torch>=2.0.0
 natten==0.14.6
 numpy==2.2.2
 onnxruntime==1.20.1
