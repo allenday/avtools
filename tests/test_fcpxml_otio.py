@@ -2,11 +2,12 @@
 Tests for the FCPXML generation using otio-fcpx-xml-lite-adapter.
 """
 
+import json
 import os
 import tempfile
 from pathlib import Path
+
 import pytest
-import json
 
 from avtools.audio.fcpxml_otio import json_to_fcpxml as audio_json_to_fcpxml
 from avtools.video.fcpxml_otio import json_to_fcpxml as video_json_to_fcpxml
