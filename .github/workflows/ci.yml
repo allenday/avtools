@@ -22,10 +22,26 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        
+        # Install Cython first
+        pip install Cython>=0.29.24
+        
+        # Install PyTorch separately
+        pip install torch>=2.0.0 torchvision>=0.21.0
+        
+        # Install madmom from source
+        pip install git+https://github.com/CPJKU/madmom.git@main#egg=madmom
+        
+        # Install natten after PyTorch
+        pip install natten==0.14.6
+        
+        # Install remaining dependencies
+        grep -v "^madmom" requirements.txt | grep -v "^torch" | grep -v "^torchvision" | grep -v "^natten" | grep -v "^Cython" > filtered_requirements.txt
+        pip install -r filtered_requirements.txt
         pip install -r requirements-dev.txt
-        # We might still need editable install for the package itself depending on test setup
-        # pip install -e .
+        
+        # Install the package in development mode
+        pip install -e .
 
     - name: Run Ruff Linter
       run: |
