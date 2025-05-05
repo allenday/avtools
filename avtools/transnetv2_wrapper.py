@@ -21,7 +21,6 @@ def predict_video(filename_or_video, threshold=0.5, probs=False, device=None):
     """
     import ffmpeg
     import numpy as np
-
     from transnetv2pt.transnetv2_pytorch import TransNetV2
 
     # Set device if not provided
