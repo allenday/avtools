@@ -1,8 +1,8 @@
-import subprocess
-import pytest
-from pathlib import Path
 import json
-import os
+from pathlib import Path
+
+import pytest
+import subprocess
 
 # Define the path to the test data relative to the tests directory
 TEST_DATA_DIR = Path(__file__).parent.parent / "data"
@@ -38,7 +38,7 @@ def test_detect_shots_cli(tmp_path, monkeypatch): # Add monkeypatch fixture
         assert output_json.is_file(), f"Output JSON file not created: {output_json}"
 
         # Check if output file is valid JSON and not empty
-        with open(output_json, 'r') as f:
+        with open(output_json) as f:
             try:
                 data = json.load(f)
                 assert isinstance(data, dict), "Output is not a JSON object"
@@ -55,4 +55,5 @@ def test_detect_shots_cli(tmp_path, monkeypatch): # Add monkeypatch fixture
     except Exception as e:
         pytest.fail(f"An unexpected error occurred during 'detect-shots' test: {e}")
 
-# Add more tests here for other video commands like extract-shots, cache-frames etc. 
+# Add more tests here for other video commands like extract-shots, cache-frames etc.
+   
