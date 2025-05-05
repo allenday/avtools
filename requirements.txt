@@ -3,5 +3,5 @@ ffmpeg-python==0.2.0
 Cython>=0.29.24
 torch>=2.0.0
 torchvision>=0.15.0
-madmom @ git+https://github.com/CPJKU/madmom.git@main#egg=madmom
+madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom
 natten @ git+https://github.com/SHI-Labs/NATTEN.git@50a8f77412320d1413cf71a6fd30bfc8074a33bf#egg=natten
