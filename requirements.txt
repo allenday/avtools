@@ -1,7 +1,17 @@
 allin1==1.1.0
-ffmpeg-python==0.2.0
 Cython>=0.29.24
-torch>=2.0.0
-torchvision>=0.15.0
+danbooru-tag-expander>=0.1.5
+deepdanbooru==1.0.3
+ffmpeg-python==0.2.0
+huggingface-hub==0.28.1
 madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom
 natten @ git+https://github.com/SHI-Labs/NATTEN.git@50a8f77412320d1413cf71a6fd30bfc8074a33bf#egg=natten
+numpy==2.2.2
+onnxruntime==1.20.1
+opencv-python==4.11.0.86
+pandas==2.2.3
+Pillow==11.1.0
+torch>=2.0.0
+torchvision==0.21.0
+tqdm==4.66.2
+wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.1
