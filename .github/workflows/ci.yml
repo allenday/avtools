@@ -24,24 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        
-        # Install Cython first
-        pip install 'Cython>=0.29.24'
-        
-        # Install PyTorch and torchvision
-        pip install 'torch>=2.0.0' 'torchvision>=0.15.0'
-        
-        # Install ffmpeg-python
-        pip install 'ffmpeg-python==0.2.0'
-        
-        # Install allin1
-        pip install 'allin1==1.1.0'
-        
-        # Install madmom from source with specific commit using no-build-isolation
-        pip install --no-build-isolation 'madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom'
-        
-        # Install natten from source with specific commit using no-build-isolation
-        pip install --no-build-isolation 'natten @ git+https://github.com/SHI-Labs/NATTEN.git@50a8f77412320d1413cf71a6fd30bfc8074a33bf#egg=natten'
+        pip install -r requirements.txt --no-build-isolation
         
         # Install development dependencies if they exist
         if [ -f requirements-dev.txt ]; then
