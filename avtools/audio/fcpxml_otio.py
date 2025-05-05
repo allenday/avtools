@@ -6,13 +6,12 @@ import bisect
 import json
 from decimal import Decimal, getcontext
 from pathlib import Path
-from typing import Any
 
 import opentimelineio as otio
 
-from avtools.common.otio_utils import create_timeline_from_elements, write_timeline_to_fcpxml
 from avtools.common.fcpxml_utils import snap_to_frame_grid
 from avtools.common.ffmpeg_utils import get_audio_info
+from avtools.common.otio_utils import create_timeline_from_elements, write_timeline_to_fcpxml
 
 getcontext().prec = 20
 

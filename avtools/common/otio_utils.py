@@ -2,11 +2,10 @@
 Common utilities for converting between OTIO and FCPXML using the otio-fcpx-xml-lite-adapter.
 """
 
+from pathlib import Path
+
 import opentimelineio as otio
 from otio_fcpx_xml_lite_adapter import adapter
-from decimal import Decimal
-from pathlib import Path
-from typing import Dict, List, Optional, Union
 
 def create_timeline_from_elements(name: str, frame_rate: float, elements: list[dict]) -> otio.schema.Timeline:
     """
@@ -27,18 +26,13 @@ def create_timeline_from_elements(name: str, frame_rate: float, elements: list[d
     - An OTIO Timeline object
     """
     timeline = otio.schema.Timeline(name=name)
-    
     timeline.global_start_time = otio.opentime.RationalTime(0, frame_rate)
-    
     stack = otio.schema.Stack()
     timeline.tracks = stack
-    
     video_track = otio.schema.Track(name="Video", kind=otio.schema.TrackKind.Video)
     stack.append(video_track)
-    
     audio_track = otio.schema.Track(name="Audio", kind=otio.schema.TrackKind.Audio)
     stack.append(audio_track)
-    
     for elem in elements:
         elem_type = elem.get("type")
         elem_name = elem.get("name", "Unnamed")
