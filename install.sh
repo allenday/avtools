@@ -8,6 +8,9 @@ echo "Installing build dependencies..."
 pip install --upgrade pip setuptools wheel
 pip install build
 
+echo "Installing PyTorch (needed for NATTEN build)..."
+pip install torch==2.6.0
+
 echo "Setting up the wd14-tagger-standalone module properly..."
 cd wd14-tagger-standalone
 pip install -e .
@@ -18,13 +21,12 @@ cd transnetv2pt
 pip install -e .
 cd ..
 
-echo "Installing PyTorch (needed for NATTEN build)..."
-pip install torch==2.6.0
+echo "Installing NATTEN with specific commit hash..."
+pip install git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten --no-build-isolation
 
-echo "Setting up the NATTEN module properly..."
-cd NATTEN
-make install
-cd ..
+echo "Installing madmom and allin1..."
+pip install git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom --no-build-isolation
+pip install allin1==1.1.0
 
 echo "Installing the package with all dependencies..."
 pip install -e .
