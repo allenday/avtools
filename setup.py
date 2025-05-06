@@ -18,6 +18,7 @@ setup(
             "avtools-video-extract-all-frames=avtools.cli.extract_frames:extract_all_frames_main",
             "avtools-audio-fcpxml=avtools.cli.audio_commands:json_to_fcpxml_main",
             "avtools-audio-activations=avtools.cli.audio_commands:activations_main",
+            "avtools-common-probe=avtools.cli.common_commands:probe_main",
             # Legacy entry points for backward compatibility
             "audio-json-to-fcpxml=avtools.cli.audio_commands:json_to_fcpxml_main",
             "audio-activations-to-mp4=avtools.cli.audio_commands:activations_to_mp4_main",

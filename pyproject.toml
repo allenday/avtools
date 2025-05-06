@@ -61,6 +61,7 @@ audio-json-to-fcpxml = "avtools.cli.audio_commands:json_to_fcpxml_main"
 audio-activations-to-mp4 = "avtools.cli.audio_commands:activations_to_mp4_main"
 video-json-to-fcpxml = "avtools.cli.video_commands:json_to_fcpxml_main"
 video-extract-shots = "avtools.cli.video_commands:extract_shots_main"
+avtools-common-probe = "avtools.cli.common_commands:probe_main"
 
 [tool.setuptools]
 packages = ["avtools"]
