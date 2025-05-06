@@ -63,6 +63,9 @@ avtools common probe video.mp4 --json
 avtools common probe audio.wav --type audio
 avtools common timeline input.json --format fcpxml --type video
 avtools common timeline input.json --format otio --type audio
+avtools common timeline input.json --format pygenometracks --type video
+avtools common timeline input.bed --format pygenometracks --type bed
+avtools common timeline input.bed --format pygenometracks --type bed --markers markers.bed --ini custom.ini
 
 # Audio tools
 avtools audio fcpxml input.json -o output.fcpxml --fps 30
@@ -136,6 +139,8 @@ from avtools.common.timeline.io import json_to_timeline, TimelineFormat
 json_to_timeline("input.json", "output.fcpxml", format=TimelineFormat.FCPXML, media_type="video")
 # Convert to OTIO
 json_to_timeline("input.json", "output.otio", format=TimelineFormat.OTIO, media_type="audio")
+# Convert to pyGenomeTracks (generates visualization PNG and coordinate data)
+json_to_timeline("input.json", "output.ini", format=TimelineFormat.PYGENOMETRACKS, media_type="video")
 
 # Video shot extraction
 from avtools.video import shots
