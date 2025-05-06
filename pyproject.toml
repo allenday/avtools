@@ -11,10 +11,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "avtools"
 version = "0.1.0"
-description = "Audio-visual tools"
+description = "Audio and Video Tools for Media Processing"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
+authors = [
+    {name = "Allen Day", email = "allenday@allenday.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Video",
+]
+
 dependencies = [
     "Cython>=0.29.24",
     "danbooru-tag-expander>=0.1.5",
@@ -30,15 +43,98 @@ dependencies = [
     "torch>=2.6.0",
     "torchvision>=0.21.0",
     "tqdm==4.66.2",
+    "otio-fcpx-xml-lite-adapter==0.1.0",
+    "opentimelineio>=0.17.0",
     "madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom",
     "natten @ git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten",
     "allin1==1.1.0",
     "wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.1",
 ]
 
+[project.urls]
+"Homepage" = "https://github.com/allenday/avtools"
+"Bug Tracker" = "https://github.com/allenday/avtools/issues"
+
 [project.scripts]
-avtools = "avtools.cli:main"
+avtools = "avtools.cli.main:main"
+audio-json-to-fcpxml = "avtools.cli.audio_commands:json_to_fcpxml_main"
+audio-activations-to-mp4 = "avtools.cli.audio_commands:activations_to_mp4_main"
+video-json-to-fcpxml = "avtools.cli.video_commands:json_to_fcpxml_main"
+video-extract-shots = "avtools.cli.video_commands:extract_shots_main"
+
+[tool.setuptools]
+packages = ["avtools"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
 
 [tool.ruff]
+# Same as Black.
 line-length = 120
+
+# Assume Python 3.10.
 target-version = "py310"
+
+# Exclude dependency directories that might be checked out locally
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site",
+    "venv",
+    "transnetv2pt", # Exclude submodule/dependency source
+    "wd14-tagger-standalone", # Exclude submodule/dependency source
+]
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`), Pycodestyle (`E`, `W`), isort (`I`), pyupgrade (`UP`) rules.
+select = ["E", "F", "W", "I", "UP"]
+
+# Ignore rules documented below
+ignore = [
+    "E501",  # line too long, handled by formatter
+]
+
+# Per-file ignores: Ignore E402 (import not at top) in the wrapper
+[tool.ruff.lint.per-file-ignores]
+"transnetv2_wrapper.py" = ["E402"]
+
+# Allow autofix for all enabled rules (when `--fix` option is used).
+fixable = ["ALL"]
+# Allow potentially unsafe fixes
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+# Default is false
+# dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"

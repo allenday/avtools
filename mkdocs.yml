@@ -1,0 +1,54 @@
+site_name: AVTools Documentation
+site_description: API documentation and usage guides for AVTools.
+
+repo_url: https://github.com/allenday/avtools # Assuming this is your repo URL, adjust if needed
+edit_uri: edit/main/docs/ # Assuming 'main' branch and docs in 'docs/'
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    - scheme: slate 
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_source: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - API Reference:
+    - Common Utilities: api/common.md
+    - Video Processing: api/video.md
+    - Audio Processing: api/audio.md
+    - CLI: api/cli.md
+  - User Guide:
+    - Installation: usage/installation.md # Placeholder
+    - CLI Usage: usage/cli.md # Placeholder 

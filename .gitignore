@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Exception for requirements files
+!requirements*.txt
+
 # C extensions
 *.so
 
@@ -176,3 +179,48 @@ cython_debug/
 *.un~
 *.fcpxml
 
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+*.jpg
+# *.json # Keep tasks.json ignored via tasks/ rule
+# *.txt # Replaced by exception above
+*cache*
+
+# Added by Claude Task Master
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.cursor/
+.windsurfrules/
+# OS specific
+# Task files
+tasks.json
+tasks/
+
+# Backups
+*.bak
+
+# Other specific ignores
+.env.example
+fetch_pmvhaven.py
+
+# Old submodule directories
+transnetv2pt/
+wd14-tagger-standalone/ 
