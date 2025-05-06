@@ -5,16 +5,25 @@ This module provides functions for converting between JSON, FCPXML, and OTIO for
 """
 
 import json
+import os
 from decimal import Decimal, getcontext
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import opentimelineio as otio
 
 from avtools.common.fcpxml_utils import snap_to_frame_grid
 from avtools.common.ffmpeg_utils import get_audio_info, get_video_info
 from avtools.common.otio_utils import create_timeline_from_elements, write_timeline_to_fcpxml
+
+try:
+    import pygenometracks.plotTracks as pgt
+    import matplotlib.pyplot as plt
+    import configparser
+    PYGENOMETRACKS_AVAILABLE = True
+except ImportError:
+    PYGENOMETRACKS_AVAILABLE = False
 
 getcontext().prec = 20
 
@@ -25,6 +34,7 @@ class TimelineFormat(str, Enum):
     """Supported timeline formats."""
     FCPXML = "fcpxml"
     OTIO = "otio"
+    PYGENOMETRACKS = "pygenometracks"
 
 
 def json_to_timeline(
@@ -57,8 +67,10 @@ def json_to_timeline(
     if output_path is None:
         if format == TimelineFormat.FCPXML:
             output_path = input_json_path_obj.with_suffix('.fcpxml')
-        else:  # OTIO
+        elif format == TimelineFormat.OTIO:
             output_path = input_json_path_obj.with_suffix('.otio')
+        else:  # PYGENOMETRACKS
+            output_path = input_json_path_obj.with_suffix('.ini')
     else:
         output_path = Path(output_path)
 
@@ -160,7 +172,7 @@ def json_to_timeline(
     
     if format == TimelineFormat.FCPXML:
         return write_timeline_to_fcpxml(timeline, str(output_path))
-    else:  # OTIO
+    elif format == TimelineFormat.OTIO:
         try:
             otio.adapters.write_to_file(timeline, str(output_path))
             print(f"Successfully wrote OTIO file: {output_path}")
@@ -168,6 +180,8 @@ def json_to_timeline(
         except Exception as e:
             print(f"Error writing OTIO file: {e}")
             return False
+    else:  # PYGENOMETRACKS
+        return timeline_to_pygenometracks(timeline, str(output_path), media_type)
 
 
 def create_timeline_from_json(
@@ -325,6 +339,151 @@ def create_video_timeline(
 
     timeline_name = f"{video_filename}_Shots"
     return create_timeline_from_elements(timeline_name, float(frame_rate), elements)
+
+
+def timeline_to_pygenometracks(
+    timeline: otio.schema.Timeline,
+    output_path: str,
+    media_type: str
+) -> bool:
+    """
+    Convert an OTIO timeline to pyGenomeTracks format.
+    
+    Parameters:
+    - timeline: OTIO Timeline object
+    - output_path: Path to output INI file for pyGenomeTracks
+    - media_type: Type of media ('video' or 'audio')
+    
+    Returns:
+    - True on success, False on failure
+    """
+    if not PYGENOMETRACKS_AVAILABLE:
+        print("Error: pyGenomeTracks is not available. Please install it with 'pip install pygenometracks'.")
+        return False
+    
+    try:
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        config = configparser.ConfigParser()
+        
+        config['spacer'] = {
+            'height': '0.5'
+        }
+        
+        config['x-axis'] = {
+            'fontsize': '12',
+            'where': 'top'
+        }
+        
+        # Process timeline data
+        tracks = timeline.tracks
+        if not tracks or len(tracks) == 0:
+            print("Error: Timeline has no tracks.")
+            return False
+        
+        clips = []
+        for track in tracks:
+            for item in track.each_child():
+                if hasattr(item, "name") and hasattr(item, "source_range"):
+                    start_time = item.source_range.start_time.value
+                    duration = item.source_range.duration.value
+                    end_time = start_time + duration
+                    
+                    clip_info = {
+                        'name': item.name,
+                        'start': start_time,
+                        'end': end_time
+                    }
+                    
+                    if hasattr(item, "markers") and item.markers:
+                        clip_info['markers'] = []
+                        for marker in item.markers:
+                            marker_time = marker.marked_range.start_time.value
+                            clip_info['markers'].append({
+                                'time': marker_time,
+                                'name': marker.name,
+                                'note': marker.metadata.get('note', '')
+                            })
+                    
+                    clips.append(clip_info)
+        
+        if media_type == 'video':
+            track_name = 'Video Shots'
+        else:
+            track_name = 'Audio Segments'
+        
+        bed_file = os.path.splitext(output_path)[0] + '.bed'
+        with open(bed_file, 'w') as f:
+            for i, clip in enumerate(clips):
+                f.write(f"timeline\t{int(clip['start'] * 1000)}\t{int(clip['end'] * 1000)}\t{clip['name']}\t{i}\t+\n")
+        
+        config['bed'] = {
+            'file': bed_file,
+            'title': track_name,
+            'height': '3',
+            'color': '#FF0000' if media_type == 'video' else '#0000FF',
+            'border_color': 'black',
+            'labels': 'true'
+        }
+        
+        markers = []
+        for clip in clips:
+            if 'markers' in clip:
+                for marker in clip['markers']:
+                    markers.append({
+                        'time': marker['time'],
+                        'name': marker['name'],
+                        'note': marker['note']
+                    })
+        
+        if markers:
+            markers_file = os.path.splitext(output_path)[0] + '_markers.bed'
+            with open(markers_file, 'w') as f:
+                for i, marker in enumerate(markers):
+                    marker_start = int(marker['time'] * 1000)
+                    marker_end = marker_start + 10  # Small width for markers
+                    f.write(f"timeline\t{marker_start}\t{marker_end}\t{marker['name']}\t{i}\t+\n")
+            
+            config['bed_markers'] = {
+                'file': markers_file,
+                'title': 'Markers',
+                'height': '1.5',
+                'color': '#00FF00',
+                'border_color': 'black',
+                'labels': 'true',
+                'style': 'triangles'
+            }
+        
+        with open(output_path, 'w') as configfile:
+            config.write(configfile)
+        
+        png_file = os.path.splitext(output_path)[0] + '.png'
+        
+        max_time = 0
+        for clip in clips:
+            max_time = max(max_time, clip['end'])
+        
+        region = f"timeline:0-{int(max_time * 1000)}"
+        
+        tracks_obj = pgt.PlotTracks(output_path, dpi=100)
+        fig = plt.figure(figsize=(12, 5))
+        tracks_obj.plot(fig, region)
+        fig.savefig(png_file)
+        plt.close(fig)
+        
+        print(f"Successfully wrote pyGenomeTracks configuration to: {output_path}")
+        print(f"Successfully wrote visualization to: {png_file}")
+        print(f"Successfully wrote BED data to: {bed_file}")
+        if markers:
+            print(f"Successfully wrote markers data to: {markers_file}")
+        
+        return True
+    
+    except Exception as e:
+        print(f"Error creating pyGenomeTracks visualization: {e}")
+        return False
 
 
 def create_audio_timeline(
