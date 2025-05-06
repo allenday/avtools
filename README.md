@@ -61,6 +61,8 @@ avtools --help
 # Common tools
 avtools common probe video.mp4 --json
 avtools common probe audio.wav --type audio
+avtools common timeline input.json --format fcpxml --type video
+avtools common timeline input.json --format otio --type audio
 
 # Audio tools
 avtools audio fcpxml input.json -o output.fcpxml --fps 30
@@ -128,15 +130,20 @@ avtools-cache-clear
 You can also use AVTools as a Python library:
 
 ```python
-# Audio FCPXML generation
-from avtools.audio import fcpxml
-fcpxml.json_to_fcpxml("input.json", "output.fcpxml", frame_rate=30)
+# Timeline conversion (for both audio and video)
+from avtools.common.timeline.io import json_to_timeline, TimelineFormat
+# Convert to FCPXML
+json_to_timeline("input.json", "output.fcpxml", format=TimelineFormat.FCPXML, media_type="video")
+# Convert to OTIO
+json_to_timeline("input.json", "output.otio", format=TimelineFormat.OTIO, media_type="audio")
 
 # Video shot extraction
 from avtools.video import shots
 shots.extract_shots("shots.json", "source.mp4", output_dir="./extracted_shots/")
 
-# FCPXML generation for shots
+# Legacy FCPXML generation (still supported)
+from avtools.audio import fcpxml
+fcpxml.json_to_fcpxml("input.json", "output.fcpxml", frame_rate=30)
 from avtools.video import fcpxml
 fcpxml.json_to_fcpxml("shots.json", "shots.fcpxml", video_path="source.mp4")
 
