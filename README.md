@@ -58,6 +58,10 @@ AVTools provides a unified command-line interface for all tools:
 # Get help
 avtools --help
 
+# Common tools
+avtools common probe video.mp4 --json
+avtools common probe audio.wav --type audio
+
 # Audio tools
 avtools audio fcpxml input.json -o output.fcpxml --fps 30
 avtools audio activations input.json -o visualized.mp4
@@ -70,10 +74,10 @@ avtools video extract-frame-tags frames_dir/ -o frame_tags.json
 avtools video extract-shot-tags frame_tags.json -o shot_tags.json
 
 # Frame extraction and caching
-avtools video cache-frames source.mp4 shots.json --positions start,middle,end
-avtools video extract-frames-to-dir source.mp4 shots.json --output-dir ./frames/
-avtools video cache-list
-avtools video cache-clear --older-than 7
+avtools video frames extract source.mp4 shots.json --positions start,middle,end
+avtools video frames extract-all source.mp4 shots.json --output-dir ./frames/
+avtools video cache list
+avtools video cache clear --older-than 7
 ```
 
 ### Frame Extraction System
