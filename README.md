@@ -64,6 +64,8 @@ avtools common probe audio.wav --type audio
 avtools common timeline input.json --format fcpxml --type video
 avtools common timeline input.json --format otio --type audio
 avtools common timeline input.json --format pygenometracks --type video
+avtools common timeline input.bed --format pygenometracks --type bed
+avtools common timeline input.bed --format pygenometracks --type bed --markers markers.bed --ini custom.ini
 
 # Audio tools
 avtools audio fcpxml input.json -o output.fcpxml --fps 30
