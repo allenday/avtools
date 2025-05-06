@@ -9,6 +9,8 @@ onnxruntime==1.20.1
 opencv-python==4.11.0.86
 Pillow==11.1.0
 pandas==2.2.3
+pytest
+pytest-cov
 tqdm==4.66.2
 danbooru-tag-expander>=0.1.5
 torchvision==0.21.0
