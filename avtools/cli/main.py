@@ -22,6 +22,12 @@ def common_probe():
     from .common_commands import probe
     probe()
 
+@common_group.command('timeline')
+def common_timeline():
+    """Convert JSON to timeline format (FCPXML or OTIO)."""
+    from .timeline_commands import timeline_convert
+    timeline_convert()
+
 @main.group('video')
 def video_group():
     """Video processing commands."""
