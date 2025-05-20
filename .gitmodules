@@ -7,3 +7,6 @@
 [submodule "wd14-tagger-standalone"]
 	path = wd14-tagger-standalone
 	url = https://github.com/allenday/wd14-tagger-standalone.git
+[submodule ".crct"]
+	path = .crct
+	url = git@github.com:allenday/Cline-Recursive-Chain-of-Thought-System-CRCT-.git
