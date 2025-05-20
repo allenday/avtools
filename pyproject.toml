@@ -4,7 +4,7 @@ requires = [
     "wheel",
     "Cython>=0.29.24",
     "numpy>=1.23.0",
-    "torch>=2.6.0",
+    "torch==2.6.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -42,13 +42,20 @@ dependencies = [
     "Pillow==11.1.0",
     "torch==2.6.0",
     "torchvision>=0.21.0",
+    "torchaudio==2.6.0",
     "tqdm==4.66.2",
     "otio-fcpx-xml-lite-adapter==0.1.0",
     "opentimelineio>=0.17.0",
     "madmom @ git+https://github.com/CPJKU/madmom.git@0551aa8f48d71a367d92b5d3a347a0cf7cd97cc9#egg=madmom",
     "natten @ git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten",
     "allin1==1.1.0",
-    "wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.5",
+    "black>=24.0.0",
 ]
 
 [project.urls]
@@ -57,6 +64,14 @@ dependencies = [
 
 [project.scripts]
 avtools = "avtools.cli.main:main"
+avtools-audio-json-to-fcpxml = "avtools.cli.audio_commands:json_to_fcpxml_main"
+avtools-audio-activations-to-mp4 = "avtools.cli.audio_commands:activations_to_mp4_main"
+avtools-video-json-to-fcpxml = "avtools.cli.video_commands:json_to_fcpxml_main"
+avtools-video-extract-shots = "avtools.cli.video_commands:extract_shots_main"
+avtools-extract-frames = "avtools.cli.extract_frames:main"
+avtools-extract-all-frames = "avtools.cli.extract_frames:extract_all_frames_main"
+avtools-cache-list = "avtools.cli.extract_frames:cache_list_main"
+avtools-cache-clear = "avtools.cli.extract_frames:cache_clear_main"
 
 [tool.setuptools]
 packages = ["avtools"]
@@ -100,7 +115,6 @@ exclude = [
     "site",
     "venv",
     "transnetv2pt", # Exclude submodule/dependency source
-    "wd14-tagger-standalone", # Exclude submodule/dependency source
 ]
 
 [tool.ruff.lint]
