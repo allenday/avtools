@@ -10,3 +10,6 @@
 [submodule ".crct"]
 	path = .crct
 	url = git@github.com:allenday/Cline-Recursive-Chain-of-Thought-System-CRCT-.git
+[submodule "TransNetV2"]
+	path = TransNetV2
+	url = https://github.com/badde57/TransNetV2.git
