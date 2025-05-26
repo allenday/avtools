@@ -48,6 +48,9 @@ dependencies = [
     "opentimelineio>=0.17.0",
     "madmom @ git+https://github.com/CPJKU/madmom.git@27f032e8947204902c675e5e341a3faf5dc86dae#egg=madmom",
     "natten @ git+https://github.com/SHI-Labs/NATTEN.git@3b54c76185904f3cb59a49fff7bc044e4513d106#egg=natten",
+    "wd14-tagger-standalone @ git+https://github.com/allenday/wd14-tagger-standalone.git@v0.1.2",
+
+
     "allin1==1.1.0",
 ]
 
