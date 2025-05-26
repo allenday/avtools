@@ -1,1 +1,10 @@
 
+[submodule "TransNetV2"]
+	path = TransNetV2
+	url = git@github.com:badde57/TransNetV2.git
+[submodule "NATTEN"]
+	path = NATTEN
+	url = git@github.com:SHI-Labs/NATTEN.git
+[submodule "wd14-tagger-standalone"]
+	path = wd14-tagger-standalone
+	url = git@github.com:allenday/wd14-tagger-standalone.git
